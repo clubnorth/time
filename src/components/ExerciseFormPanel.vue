@@ -23,24 +23,13 @@
             <div class="form-section">
               <label class="form-label">运动类型</label>
               <div class="sport-capsules">
-                <button
-                  v-for="s in sports"
-                  :key="s"
-                  class="sport-capsule"
-                  :class="{ active: selectedSport === s }"
-                  @click="selectedSport = s"
-                >{{ s }}</button>
+                <button v-for="s in sports" :key="s" class="sport-capsule" :class="{ active: selectedSport === s }" @click="selectedSport = s">{{ s }}</button>
               </div>
             </div>
 
             <div class="form-section">
               <label class="form-label">{{ sportLabel }}</label>
-              <input
-                v-model="amount"
-                type="number"
-                class="form-input"
-                :placeholder="'请输入' + sportUnit"
-              />
+              <input v-model="amount" type="number" class="form-input" :placeholder="'请输入' + sportUnit" />
             </div>
           </div>
         </div>
@@ -57,36 +46,11 @@
                 </button>
               </div>
               <div class="picker-body">
-                <div class="picker-col">
-                  <button class="picker-arrow" @click="pickYear++">▲</button>
-                  <div class="picker-value picker-value-sm">{{ pickYear }}</div>
-                  <button class="picker-arrow" @click="pickYear--">▼</button>
-                  <span class="picker-unit">年</span>
-                </div>
-                <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustMonth(1)">▲</button>
-                  <div class="picker-value picker-value-sm">{{ pad(pickMonth) }}</div>
-                  <button class="picker-arrow" @click="adjustMonth(-1)">▼</button>
-                  <span class="picker-unit">月</span>
-                </div>
-                <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustDay(1)">▲</button>
-                  <div class="picker-value picker-value-sm">{{ pad(pickDay) }}</div>
-                  <button class="picker-arrow" @click="adjustDay(-1)">▼</button>
-                  <span class="picker-unit">日</span>
-                </div>
-                <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustHour(1)">▲</button>
-                  <div class="picker-value">{{ pad(pickHour) }}</div>
-                  <button class="picker-arrow" @click="adjustHour(-1)">▼</button>
-                  <span class="picker-unit">时</span>
-                </div>
-                <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustMinute(1)">▲</button>
-                  <div class="picker-value">{{ pad(pickMinute) }}</div>
-                  <button class="picker-arrow" @click="adjustMinute(-1)">▼</button>
-                  <span class="picker-unit">分</span>
-                </div>
+                <div class="picker-col"><button class="picker-arrow" @click="pickYear++">▲</button><div class="picker-value picker-value-sm">{{ pickYear }}</div><button class="picker-arrow" @click="pickYear--">▼</button><span class="picker-unit">年</span></div>
+                <div class="picker-col"><button class="picker-arrow" @click="adjustMonth(1)">▲</button><div class="picker-value picker-value-sm">{{ pad(pickMonth) }}</div><button class="picker-arrow" @click="adjustMonth(-1)">▼</button><span class="picker-unit">月</span></div>
+                <div class="picker-col"><button class="picker-arrow" @click="adjustDay(1)">▲</button><div class="picker-value picker-value-sm">{{ pad(pickDay) }}</div><button class="picker-arrow" @click="adjustDay(-1)">▼</button><span class="picker-unit">日</span></div>
+                <div class="picker-col"><button class="picker-arrow" @click="adjustHour(1)">▲</button><div class="picker-value">{{ pad(pickHour) }}</div><button class="picker-arrow" @click="adjustHour(-1)">▼</button><span class="picker-unit">时</span></div>
+                <div class="picker-col"><button class="picker-arrow" @click="adjustMinute(1)">▲</button><div class="picker-value">{{ pad(pickMinute) }}</div><button class="picker-arrow" @click="adjustMinute(-1)">▼</button><span class="picker-unit">分</span></div>
               </div>
               <button class="picker-confirm" @click="confirmTime">确定</button>
             </div>
@@ -96,7 +60,6 @@
     </Transition>
   </Teleport>
 </template>
-
 <script setup>
 import { ref, computed, watch } from 'vue'
 
@@ -141,6 +104,7 @@ function adjustHour(delta) { pickHour.value = (pickHour.value + delta + 24) % 24
 function adjustMinute(delta) { pickMinute.value = (pickMinute.value + delta + 60) % 60 }
 function handleCreate() { if (!String(amount.value).trim()) return; emit('create', { time: currentTime.value, sport: selectedSport.value, amount: amount.value.trim() }) }
 </script>
+
 
 <style scoped>
 .form-overlay { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.25); display: flex; align-items: flex-end; justify-content: center; }
