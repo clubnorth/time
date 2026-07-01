@@ -17,6 +17,7 @@
     </div>
     <AddEntryPanel :visible="showAddPanel" @close="showAddPanel = false" @select="handleSelect" />
     <ThoughtFormPanel :visible="showThoughtForm" :kind="thoughtKind" @cancel="showThoughtForm = false" @create="handleThoughtCreate" />
+    <AssetFormPanel :visible="showAssetForm" @cancel="showAssetForm = false" @create="handleAssetCreate" />
   </div>
 </template>
 
@@ -27,6 +28,7 @@ import TimelineEntryGroup from './components/TimelineEntryGroup.vue'
 import AddButton from './components/AddButton.vue'
 import ThoughtFormPanel from './components/ThoughtFormPanel.vue'
 import AddEntryPanel from './components/AddEntryPanel.vue'
+import AssetFormPanel from './components/AssetFormPanel.vue'
 
 const API_BASE = 'http://localhost:8080'
 const PAGE_SIZE = 30
@@ -45,6 +47,7 @@ const hasMore = ref(true)
 const showAddPanel = ref(false)
 const showThoughtForm = ref(false)
 const thoughtKind = ref('positive')
+const showAssetForm = ref(false)
 
 async function fetchEntries(limit, before) {
   let url = `${API_BASE}/api/entries?limit=${limit}`
@@ -135,7 +138,40 @@ const allGroups = computed(() => {
 function handleAdd() { showAddPanel.value = true }
 function handleSelect(item) {
   if (item.kind) { thoughtKind.value = item.kind; showThoughtForm.value = true }
+  else if (item.id === 'asset') { showAddPanel.value = false; showAssetForm.value = true }
   else { showAddPanel.value = false }
+}
+
+async function handleAssetCreate(data) {
+  const d = data.time
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const monthKey = `${y}-${m}`
+  const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
+
+  try {
+    const res = await fetch(`${API_BASE}/api/entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'asset',
+        title: '资产记录',
+        description: data.amount,
+        category: 'yellow',
+        recorded_at: recordedAt,
+      }),
+    })
+    if ((await res.json()).code === 0) {
+      await loadInitial()
+      skipScrollWatch.value = true
+      currentMonth.value = monthKey
+    }
+  } catch (e) {
+    console.error('Failed to create asset entry:', e)
+  }
+
+  showAssetForm.value = false
 }
 
 async function handleThoughtCreate(data) {

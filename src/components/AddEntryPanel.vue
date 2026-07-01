@@ -29,12 +29,13 @@
                     <circle cx="12" cy="11" r="5" />
                     <path d="M12 6v2" />
                   </template>
-                  <!-- 备忘录: document -->
-                  <template v-if="item.id === 'memo'">
-                    <rect x="4" y="3" width="16" height="18" rx="2" />
-                    <path d="M8 8h8" />
-                    <path d="M8 12h8" />
-                    <path d="M8 16h5" />
+                  <!-- 资产记录: wallet -->
+                  <template v-if="item.id === 'asset'">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M15 9.5c-1.5-1.5-4.5-1.5-6 0" />
+                    <path d="M9 14.5c1.5 1.5 4.5 1.5 6 0" />
+                    <line x1="12" y1="7" x2="12" y2="9" />
+                    <line x1="12" y1="15" x2="12" y2="17" />
                   </template>
                   <!-- 日记: book -->
                   <template v-if="item.id === 'diary'">
