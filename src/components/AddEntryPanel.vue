@@ -43,14 +43,6 @@
                     <path d="M4 7h8v12l-4-2.5L4 19V7Z" />
                     <path d="M20 7h-8v12l4-2.5L20 19V7Z" />
                   </template>
-                  <!-- 待办事项: checklist -->
-                  <template v-if="item.id === 'todo'">
-                    <rect x="3.5" y="5.5" width="6" height="6" rx="1.2" />
-                    <polyline points="5,8.5 6.5,10 9,7.5" />
-                    <path d="M12.5 8.5h8" />
-                    <rect x="3.5" y="14.5" width="6" height="6" rx="1.2" />
-                    <path d="M12.5 17.5h8" />
-                  </template>
                   <!-- 读书: book -->
                   <template v-if="item.id === 'reading'">
                     <path d="M12 7v10" />
@@ -159,7 +151,6 @@ const items = [
   { id: 'thought',    title: '念头',     subtitle: '记录一闪而过的想法',   color: '#9DB5C9' },
   { id: 'asset',      title: '资产记录', subtitle: '记录资产变动',        color: '#D4B87A' },
   { id: 'exercise',   title: '运动',     subtitle: '记录运动与锻炼',       color: '#84B8A4' },
-  { id: 'todo',       title: '待办事项', subtitle: '管理你的任务清单',     color: '#CF8B86' },
   { id: 'reading',    title: '读书',     subtitle: '记录阅读的书目与笔记', color: '#A099C4' },
   { id: 'movie',      title: '电影',     subtitle: '记录看过的电影',       color: '#CB99B0' },
   { id: 'tv',         title: '剧集',     subtitle: '追剧进度与评价',       color: '#D4A882' },
