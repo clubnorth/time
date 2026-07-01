@@ -66,6 +66,8 @@ defineProps({
 
 .card-col {
   grid-column: 5;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .content-card {
@@ -100,6 +102,7 @@ defineProps({
   color: #2c2c2c;
   line-height: 1.4;
   margin: 0;
+  word-break: break-word;
 }
 
 .card-body {
@@ -107,6 +110,7 @@ defineProps({
   color: #666;
   line-height: 1.65;
   margin: 0;
+  word-break: break-word;
   text-align: left;
 }
 </style>
