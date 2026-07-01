@@ -13,7 +13,9 @@
     </div>
 
     <div class="bottom-zone">
+      <button class="bottom-side-btn left">统计</button>
       <AddButton @add="handleAdd" />
+      <button class="bottom-side-btn right">待办事项</button>
     </div>
     <AddEntryPanel :visible="showAddPanel" @close="showAddPanel = false" @select="handleSelect" />
     <ThoughtFormPanel :visible="showThoughtForm" :kind="thoughtKind" @cancel="showThoughtForm = false" @create="handleThoughtCreate" />
@@ -462,9 +464,20 @@ onUnmounted(() => {
   background: #f8f8f8;
   border-top: 1px solid #ebebeb;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
   z-index: 50;
+}
+
+.bottom-side-btn {
+  font-size: 13px;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  white-space: nowrap;
 }
 
 </style>
