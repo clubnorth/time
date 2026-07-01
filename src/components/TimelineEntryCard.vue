@@ -109,9 +109,7 @@ defineProps({
 }
 
 .card-body.asset {
-  font-weight: 700;
   font-size: 15px;
-  color: #1a1a1a;
 }
 .card-body {
   font-size: 13px;
@@ -123,6 +121,7 @@ defineProps({
 }
 
 .rainbow {
+  font-weight: 700;
   background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000);
   background-size: 200% auto;
   -webkit-background-clip: text;
