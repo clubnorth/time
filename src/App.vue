@@ -152,10 +152,8 @@ async function handleThoughtCreate(data) {
     })
     const json = await res.json()
     if (json.code === 0) {
-      // Fetch the target month directly (not currentMonth, which may have changed during async)
       const newData = await fetchEntries(monthKey)
       timelineData.value = newData
-      // Ensure month is in availableMonths
       if (!availableMonths.value.find(m => m.value === monthKey)) {
         availableMonths.value.push({
           label: `${y}年${d.getMonth() + 1}月`,
@@ -163,7 +161,6 @@ async function handleThoughtCreate(data) {
         })
         availableMonths.value.sort((a, b) => b.value.localeCompare(a.value))
       }
-      // Switch month if different (guard against scroll feedback)
       if (monthKey !== currentMonth.value) {
         skipScrollWatch.value = true
         currentMonth.value = monthKey
