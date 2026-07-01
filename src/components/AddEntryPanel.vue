@@ -120,7 +120,7 @@
                 <span class="entry-title">{{ item.title }}</span>
                 <span class="entry-sub">{{ item.subtitle }}</span>
               </div>
-              <div v-if="item.id !== 'thought'" style="display:contents">
+              <div v-if="item.id !== 'thought' && item.id !== 'discipline' && item.id !== 'nosugar'" style="display:contents">
               <button class="entry-plus" @click.stop="$emit('select', item)" aria-label="添加">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -128,7 +128,14 @@
                 </svg>
               </button>
               </div>
-              <div v-if="item.id === 'thought'" class="thought-actions">
+              <div v-if="item.id === 'discipline' || item.id === 'nosugar'" style="display:contents">
+              <button class="check-btn" @click.stop="$emit('select', item)" aria-label="打卡">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+            <div v-if="item.id === 'thought'" class="thought-actions">
                 <button class="thought-btn thought-btn-pos" @click.stop="$emit('select', { ...item, kind: 'positive' })" aria-label="正向">正</button>
                 <button class="thought-btn thought-btn-neg" @click.stop="$emit('select', { ...item, kind: 'negative' })" aria-label="负向">负</button>
               </div>
@@ -347,6 +354,20 @@ const items = [
   color: #7c4a4a;
 }
 
+.check-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid #c8e6c9;
+  background: #e8f5e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.check-btn:hover { background: #c8e6c9; border-color: #4caf50; }
 .thought-btn-neg:hover {
   background: #e0c8c8;
 }

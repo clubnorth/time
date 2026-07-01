@@ -128,7 +128,13 @@ const allGroups = computed(() => {
         const isExercise = e.type === 'exercise'
         let title = e.title
         let desc = e.description
-        if (isExercise) {
+        const isDiscipline = e.type === 'discipline'
+        const isNosugar = e.type === 'nosugar'
+        if (isDiscipline) {
+          desc = '今天是连续自律第 ' + (e.description || '1') + ' 天'
+        } else if (isNosugar) {
+          desc = '今天是连续无糖第 ' + (e.description || '1') + ' 天'
+        } else if (isExercise) {
           const sportName = e.title.replace('运动·', '')
           const baseDesc = {
             '跑步': '你今天跑步跑了 ' + e.description + ' 千米',
@@ -172,6 +178,7 @@ function handleSelect(item) {
   if (item.kind) { thoughtKind.value = item.kind; showThoughtForm.value = true }
   else if (item.id === 'asset') { showAssetForm.value = true }
   else if (item.id === 'uric') { showUricForm.value = true }
+  else if (item.id === 'discipline' || item.id === 'nosugar') { handleQuickCreate(item.id) }
   else if (item.id === 'exercise') { showExerciseForm.value = true }
   else { showAddPanel.value = false }
 }
@@ -288,6 +295,53 @@ async function handleAssetCreate(data) {
   }
 
   showAssetForm.value = false
+  showAddPanel.value = false
+}
+
+async function getConsecutiveDay(type) {
+  try {
+    const res = await fetch(`${API_BASE}/api/entries?limit=30`)
+    const json = await res.json()
+    if (json.code !== 0 || !Array.isArray(json.data)) return 1
+    const filtered = json.data.filter(e => e.type === type)
+    if (filtered.length === 0) return 1
+    const latest = filtered[0]
+    const latestDate = new Date(latest.recorded_at.substring(0, 10))
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const lds = latestDate.toDateString()
+    if (lds === today.toDateString() || lds === yesterday.toDateString()) {
+      return (parseInt(latest.description) || 0) + 1
+    }
+    return 1
+  } catch (e) { return 1 }
+}
+
+async function handleQuickCreate(type) {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const monthKey = `${y}-${m}`
+  const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
+
+  const dayCount = await getConsecutiveDay(type)
+  const title = type === 'discipline' ? '自律' : '禁止糖分'
+
+  try {
+    const res = await fetch(`${API_BASE}/api/entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, title, description: String(dayCount), category: 'green', recorded_at: recordedAt }),
+    })
+    if ((await res.json()).code === 0) {
+      await loadInitial()
+      skipScrollWatch.value = true
+      currentMonth.value = monthKey
+    }
+  } catch (e) { console.error('Quick create failed:', e) }
+
   showAddPanel.value = false
 }
 
