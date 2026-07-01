@@ -29,7 +29,7 @@
                 maxlength="200"
                 rows="4"
               ></textarea>
-              <span class="form-count">{{ note.length }}/200</span>
+              <span class="form-count" :class="{ full: note.length >= 200 }">{{ note.length }}/200</span>
             </div>
           </div>
         </div>
@@ -270,9 +270,7 @@ function handleCreate() {
   min-height: 48px;
 }
 
-.form-time-picker:active {
-  border-color: #d0d0d0;
-}
+
 
 .form-time-text {
   font-size: 15px;
@@ -282,7 +280,7 @@ function handleCreate() {
 .form-time-arrow {
   color: #bbb;
   flex-shrink: 0;
-  margin-left: 8px;
+  margin-left: auto;
 }
 
 .form-textarea {
@@ -298,14 +296,15 @@ function handleCreate() {
   outline: none;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
   -webkit-appearance: none;
-  min-height: 100px;
+  min-height: 200px;
 }
 
 .form-textarea::placeholder { color: #bbb; }
-.form-textarea:focus { border-color: #c0c0c0; }
 
+
+.form-count.full { color: #e85d75; font-weight: 600; }
 .form-count {
-  display: block;
+  display: block
   text-align: right;
   font-size: 12px;
   color: #bbb;
