@@ -66,7 +66,13 @@ func main() {
 
   // Setup router
   mux := http.NewServeMux()
-  mux.HandleFunc("GET /api/entries", entryH.GetEntries)
+  mux.HandleFunc("GET /api/entries", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("month") != "" {
+			entryH.GetEntries(w, r)
+		} else {
+			entryH.GetAllEntries(w, r)
+		}
+	})
   mux.HandleFunc("POST /api/entries", entryH.CreateEntry)
 
   // Apply middleware

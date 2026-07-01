@@ -29,49 +29,48 @@ import ThoughtFormPanel from './components/ThoughtFormPanel.vue'
 import AddEntryPanel from './components/AddEntryPanel.vue'
 
 const API_BASE = 'http://localhost:8080'
-const currentMonth = ref('2025-06')
-const skipScrollWatch = ref(false)
+const weekdays = ['日', '一', '二', '三', '四', '五', '六'].map(d => '周' + d)
 
-const availableMonths = ref([
-  { label: '2025年1月', value: '2025-01' },
-  { label: '2025年2月', value: '2025-02' },
-  { label: '2025年3月', value: '2025-03' },
-  { label: '2025年4月', value: '2025-04' },
-  { label: '2025年5月', value: '2025-05' },
-  { label: '2025年6月', value: '2025-06' },
-])
+// Data
+const timelineData = ref([])
+const currentMonth = ref('')
+const availableMonths = ref([])
+const skipScrollWatch = ref(false)
 
 const showAddPanel = ref(false)
 const showThoughtForm = ref(false)
 const thoughtKind = ref('positive')
-let thoughtIdCounter = 1000
-const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
-// Timeline data from API
-const timelineData = ref([])
-const loading = ref(false)
-
-async function fetchEntries(month) {
-  loading.value = true
+async function fetchAllEntries() {
   try {
-    const res = await fetch(`${API_BASE}/api/entries?month=${month}`)
+    const res = await fetch(`${API_BASE}/api/entries`)
     const json = await res.json()
     if (json.code === 0 && Array.isArray(json.data)) {
-      return json.data
+      timelineData.value = json.data
+      // Derive months from data
+      const months = new Set()
+      for (const e of json.data) {
+        months.add(e.recorded_at.substring(0, 7))
+      }
+      const sorted = [...months].sort().reverse()
+      availableMonths.value = sorted.map(m => ({
+        label: `${m.substring(0,4)}年${parseInt(m.substring(5,7))}月`,
+        value: m,
+      }))
+      // Set current month to the first available
+      if (sorted.length > 0 && !currentMonth.value) {
+        currentMonth.value = sorted[0]
+      }
     }
   } catch (e) {
     console.error('Failed to fetch entries:', e)
-  } finally {
-    loading.value = false
   }
-  return []
 }
 
-// Convert API entries to timeline groups
+// Convert entries to timeline groups (all data, sorted by time)
 const allGroups = computed(() => {
   if (timelineData.value.length === 0) return []
   
-  // Group entries by date
   const byDate = {}
   for (const entry of timelineData.value) {
     const d = entry.recorded_at.substring(0, 10)
@@ -79,23 +78,18 @@ const allGroups = computed(() => {
     byDate[d].push(entry)
   }
   
-  // Sort dates descending and build groups
   const groups = []
   const dates = Object.keys(byDate).sort().reverse()
   for (const date of dates) {
     const entries = byDate[date]
       .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))
-      .map(e => {
-        const time = e.recorded_at.substring(11, 16)
-        const d = new Date(date)
-        return {
-          id: e.id,
-          time,
-          title: e.title,
-          description: e.description,
-          category: e.category,
-        }
-      })
+      .map(e => ({
+        id: e.id,
+        time: e.recorded_at.substring(11, 16),
+        title: e.title,
+        description: e.description,
+        category: e.category,
+      }))
     
     const d = new Date(date)
     groups.push({
@@ -108,23 +102,10 @@ const allGroups = computed(() => {
   return groups
 })
 
-// Watch month changes and fetch
-watch(currentMonth, async (newMonth) => {
-  const data = await fetchEntries(newMonth)
-  timelineData.value = data
-}, { immediate: true })
-
-function handleAdd() {
-  showAddPanel.value = true
-}
-
+function handleAdd() { showAddPanel.value = true }
 function handleSelect(item) {
-  if (item.kind) {
-    thoughtKind.value = item.kind
-    showThoughtForm.value = true
-  } else {
-    showAddPanel.value = false
-  }
+  if (item.kind) { thoughtKind.value = item.kind; showThoughtForm.value = true }
+  else { showAddPanel.value = false }
 }
 
 async function handleThoughtCreate(data) {
@@ -152,19 +133,9 @@ async function handleThoughtCreate(data) {
     })
     const json = await res.json()
     if (json.code === 0) {
-      const newData = await fetchEntries(monthKey)
-      timelineData.value = newData
-      if (!availableMonths.value.find(m => m.value === monthKey)) {
-        availableMonths.value.push({
-          label: `${y}年${d.getMonth() + 1}月`,
-          value: monthKey,
-        })
-        availableMonths.value.sort((a, b) => b.value.localeCompare(a.value))
-      }
-      if (monthKey !== currentMonth.value) {
-        skipScrollWatch.value = true
-        currentMonth.value = monthKey
-      }
+      await fetchAllEntries()
+      skipScrollWatch.value = true
+      currentMonth.value = monthKey
     }
   } catch (e) {
     console.error('Failed to create entry:', e)
@@ -191,10 +162,8 @@ function handleScroll() {
 }
 
 watch(currentMonth, (newMonth) => {
-  if (skipScrollWatch.value) {
-    skipScrollWatch.value = false
-    return
-  }
+  if (skipScrollWatch.value) { skipScrollWatch.value = false; return }
+  if (!newMonth) return
   const dots = document.querySelectorAll('[data-date]')
   for (const dot of dots) {
     if (dot.dataset.date.startsWith(newMonth)) {
@@ -205,6 +174,7 @@ watch(currentMonth, (newMonth) => {
 })
 
 onMounted(() => {
+  fetchAllEntries()
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 

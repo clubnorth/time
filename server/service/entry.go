@@ -45,6 +45,27 @@ func (s *EntryService) GetEntriesByMonth(month string) ([]Entry, error) {
   return entries, nil
 }
 
+
+func (s *EntryService) GetAllEntries() ([]Entry, error) {
+  query := "SELECT id, type, title, description, category, valence, recorded_at, created_at, updated_at FROM entries ORDER BY recorded_at DESC, id DESC"
+  rows, err := s.db.Query(query)
+  if err != nil {
+    return nil, err
+  }
+  defer rows.Close()
+
+  var entries []Entry
+  for rows.Next() {
+    var e Entry
+    err := rows.Scan(&e.ID, &e.Type, &e.Title, &e.Description, &e.Category, &e.Valence, &e.RecordedAt, &e.CreatedAt, &e.UpdatedAt)
+    if err != nil {
+      return nil, err
+    }
+    entries = append(entries, e)
+  }
+  return entries, nil
+}
+
 func (s *EntryService) CreateEntry(e *Entry) error {
   now := time.Now().Format("2006-01-02 15:04:05")
   query := `INSERT INTO entries (type, title, description, category, valence, recorded_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`

@@ -21,7 +21,7 @@ type apiResponse struct {
 }
 
 func respond(w http.ResponseWriter, code int, data interface{}) {
-  w.Header().Set("Content-Type", "application/json")
+  w.Header().Set("Content-Type", "application/json; charset=utf-8")
   w.WriteHeader(code)
   json.NewEncoder(w).Encode(apiResponse{
     Code:    0,
@@ -31,7 +31,7 @@ func respond(w http.ResponseWriter, code int, data interface{}) {
 }
 
 func respondError(w http.ResponseWriter, code int, msg string) {
-  w.Header().Set("Content-Type", "application/json")
+  w.Header().Set("Content-Type", "application/json; charset=utf-8")
   w.WriteHeader(code)
   json.NewEncoder(w).Encode(apiResponse{
     Code:    code,
@@ -47,6 +47,19 @@ func (h *EntryHandler) GetEntries(w http.ResponseWriter, r *http.Request) {
     return
   }
   entries, err := h.svc.GetEntriesByMonth(month)
+  if err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  if entries == nil {
+    entries = []service.Entry{}
+  }
+  respond(w, 200, entries)
+}
+
+
+func (h *EntryHandler) GetAllEntries(w http.ResponseWriter, r *http.Request) {
+  entries, err := h.svc.GetAllEntries()
   if err != nil {
     respondError(w, 500, err.Error())
     return
