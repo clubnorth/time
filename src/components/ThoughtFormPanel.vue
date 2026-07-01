@@ -304,7 +304,7 @@ function handleCreate() {
 
 .form-count.full { color: #e85d75; font-weight: 600; }
 .form-count {
-  display: block
+  display: block;
   text-align: right;
   font-size: 12px;
   color: #bbb;
