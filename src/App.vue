@@ -311,14 +311,15 @@ async function getConsecutiveDay(type) {
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     const lds = latestDate.toDateString()
-    if (lds === today.toDateString() || lds === yesterday.toDateString()) {
-      return (parseInt(latest.description) || 0) + 1
-    }
+    if (lds === today.toDateString()) return -1
+    if (lds === yesterday.toDateString()) return (parseInt(latest.description) || 0) + 1
     return 1
   } catch (e) { return 1 }
 }
 
 async function handleQuickCreate(type) {
+  const dayCount = await getConsecutiveDay(type)
+  if (dayCount < 0) { alert('今天已经打过卡了，明天再来吧'); showAddPanel.value = false; return }
   const d = new Date()
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
