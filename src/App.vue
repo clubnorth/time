@@ -329,7 +329,6 @@ async function handleQuickCreate(type) {
   const monthKey = `${y}-${m}`
   const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
 
-  const dayCount = await getConsecutiveDay(type)
   const title = type === 'discipline' ? '自律' : '禁止糖分'
 
   try {
