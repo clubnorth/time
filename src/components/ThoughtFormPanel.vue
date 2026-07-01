@@ -116,7 +116,7 @@ const currentTime = ref(new Date())
 
 const displayTime = computed(() => {
   const d = currentTime.value
-  return `${d.getFullYear()}��${d.getMonth() + 1}��${d.getDate()}�� ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 })
 
 const daysInMonth = computed(() => {
