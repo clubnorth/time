@@ -406,3 +406,58 @@ npm run preview      # 预览生产构建
 - **Vue Router**：如多页面引入路由
 - **状态管理**：数据复杂度提升后引入 Pinia
 - **PWA**：Service Worker 离线支持
+
+---
+
+## 2026-07-01 迭代记录
+
+### 后端
+- **游标分页**：`GET /api/entries?limit=30&before=<recorded_at>` 支持无限滚动
+- **Content-Type**：`application/json; charset=utf-8` 修复中文乱码
+- **通用表设计**：`entries` 表通过 `type` 字段支持全部条目类型（thought / asset / uric / exercise / discipline / nosugar），无需额外建表
+- **Go 环境**：安装至 `D:\ProgramData\go`，`CGO_ENABLED=0` 静态编译
+
+### 前端新增组件
+| 组件 | 功能 |
+|------|------|
+| AssetFormPanel.vue | 资产记录录入，数字输入框 + 时间选择器 |
+| UricFormPanel.vue | 尿酸记录录入，数字输入框 + 时间选择器 |
+| ExerciseFormPanel.vue | 运动记录录入，胶囊按钮选择运动类型 + 数字输入 |
+
+### 页面叠加
+- 资产/尿酸/运动录入面板均为 78% 高度，叠加在 AddEntryPanel（80%）之上，露出圆角边缘
+- z-index: AddEntryPanel 1000 → 录入面板 1100 → 时间选择器 1200
+
+### 快捷打卡
+- **自律** / **禁止糖分**：绿色对勾按钮，一键打卡
+- **连续天数**：自动计算，中断归零，同一天不可重复打卡
+
+### 卡片显示
+| 类型 | 标题 | 描述格式 |
+|------|------|----------|
+| 念头 | 念头·正/负 | 备注文字 |
+| 资产记录 | 资产记录 | 你现在的余额是 [彩虹数字] 元 |
+| 尿酸记录 | 尿酸记录 | 你今天的尿酸值是 XX mol |
+| 运动 | 运动·跑步 | 你今天跑步跑了 X 千米 本次消耗 XX 卡 |
+| 自律 | 自律 | 今天是连续自律第 X 天 |
+| 禁止糖分 | 禁止糖分 | 今天是连续无糖第 X 天 |
+
+### 运动卡路里
+- 基于 MET 公式，体重 70kg：
+  - 跑步 km×56 / 骑行 km×21 / 俯卧撑 个×0.15 / 跳绳 个×0.12
+  - 游泳 m×0.28 / 徒步 km×56 / 自由活动 min×3.5
+- 卡路里存入 `valence` 字段，卡片追加"本次消耗 XX 卡"
+
+### 底部栏
+- 左侧图标+文字"统计"，右侧图标+文字"待办事项"，中间 + 号按钮
+- 样式待实现
+
+### UI 修复
+- 卡片 `word-break: break-word` 防止长文本溢出
+- 时间箭头 `position: absolute` 右对齐，文字居中
+- 数字输入框按钮解除 `.trim()` bug（number 类型改用 `String()` 包裹）
+- 全部新建成功后自动关闭第二页回到时间轴
+- .rainbow 使用 `:deep()` 穿透 scoped CSS 到 v-html 内容
+
+### 已知问题
+- 部分组件中文偶现乱码（PowerShell `Set-Content -Encoding UTF8` BOM 污染），需用 Node.js `WriteAllText(noBOM)` 重建

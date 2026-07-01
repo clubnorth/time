@@ -481,7 +481,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 2px;
   font-size: 11px;
-  color: #888;
+  color: #1a1a1a;
   background: none;
   border: none;
   cursor: pointer;
