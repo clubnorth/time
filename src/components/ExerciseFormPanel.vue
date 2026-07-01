@@ -6,7 +6,7 @@
           <div class="form-navbar">
             <button class="form-nav-left" @click="$emit('cancel')">取消</button>
             <span class="form-nav-title">运动记录</span>
-            <button class="form-nav-right" @click="handleCreate" :disabled="!amount.trim()">新建</button>
+            <button class="form-nav-right" @click="handleCreate" :disabled="!String(amount).trim()">新建</button>
           </div>
 
           <div class="form-body">
@@ -139,7 +139,7 @@ function adjustMonth(delta) { let m = pickMonth.value + delta; if (m > 12) { m=1
 function adjustDay(delta) { let d = pickDay.value + delta; const max = daysInMonth.value; if (d > max) { d=1; adjustMonth(1) } if (d < 1) { adjustMonth(-1); d = new Date(pickYear.value, pickMonth.value-1, 0).getDate() } pickDay.value = d }
 function adjustHour(delta) { pickHour.value = (pickHour.value + delta + 24) % 24 }
 function adjustMinute(delta) { pickMinute.value = (pickMinute.value + delta + 60) % 60 }
-function handleCreate() { if (!amount.value.trim()) return; emit('create', { time: currentTime.value, sport: selectedSport.value, amount: amount.value.trim() }) }
+function handleCreate() { if (!String(amount.value).trim()) return; emit('create', { time: currentTime.value, sport: selectedSport.value, amount: amount.value.trim() }) }
 </script>
 
 <style scoped>

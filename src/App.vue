@@ -130,7 +130,7 @@ const allGroups = computed(() => {
         let desc = e.description
         if (isExercise) {
           const sportName = e.title.replace('运动·', '')
-          desc = {
+          const baseDesc = {
             '跑步': '你今天跑步跑了 ' + e.description + ' 千米',
             '骑行': '你今天骑行了 ' + e.description + ' 千米',
             '俯卧撑': '你今天俯卧撑了 ' + e.description + ' 个',
@@ -139,6 +139,7 @@ const allGroups = computed(() => {
             '徒步': '你今天徒步了 ' + e.description + ' 公里',
             '自由活动': '你今天自由活动了 ' + e.description + ' 分钟',
           }[sportName] || (e.description + ' ' + sportName)
+          desc = baseDesc + (e.valence ? ' 本次消耗 ' + e.valence + ' 卡' : '')
         } else if (isAsset) {
           desc = '你现在的余额是 <span class="rainbow">' + (e.description || '0') + '</span> 元'
         } else if (isUric) {
@@ -183,15 +184,31 @@ async function handleExerciseCreate(data) {
   const monthKey = `${y}-${m}`
   const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
 
+  // Calorie calculation (weight: 70kg, based on MET formulas)
+  const amount = parseFloat(data.amount) || 0
+  const weight = 70
+  const sport = data.sport
+  const metCalcs = {
+    '跑步': amount * 56,           // 跑步: per km
+    '骑行': amount * 21,           // 骑行: per km
+    '俯卧撑': amount * 0.15,   // 俯卧撑: per rep
+    '跳绳': amount * 0.12,         // 跳绳: per rep
+    '游泳': amount * 0.28,         // 游泳: per m
+    '徒步': amount * 56,           // 徒步: per km
+    '自由活动': amount * 3.5, // 自由活动: per min
+  }
+  const calories = Math.round(metCalcs[sport] || 0)
+
   try {
     const res = await fetch(`${API_BASE}/api/entries`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type: 'exercise',
-        title: '运动·' + data.sport,
+        title: '运动·' + sport,
         description: data.amount,
         category: 'green',
+        valence: String(calories),
         recorded_at: recordedAt,
       }),
     })
