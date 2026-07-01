@@ -179,7 +179,7 @@ function handleCreate() {
 .form-sheet {
   width: 100%;
   max-width: 480px;
-  height: 68%;
+  height: 78%;
   background: #f5f5f7;
   border-radius: 16px 16px 0 0;
   display: flex;
