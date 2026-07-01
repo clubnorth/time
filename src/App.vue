@@ -144,7 +144,6 @@ async function handleThoughtCreate(data) {
     recorded_at: recordedAt,
   }
 
-  // POST to API
   try {
     const res = await fetch(`${API_BASE}/api/entries`, {
       method: 'POST',
@@ -153,9 +152,9 @@ async function handleThoughtCreate(data) {
     })
     const json = await res.json()
     if (json.code === 0) {
-      // Refresh current month data
-      const data = await fetchEntries(currentMonth.value)
-      timelineData.value = data
+      // Fetch the target month directly (not currentMonth, which may have changed during async)
+      const newData = await fetchEntries(monthKey)
+      timelineData.value = newData
       // Ensure month is in availableMonths
       if (!availableMonths.value.find(m => m.value === monthKey)) {
         availableMonths.value.push({
@@ -164,8 +163,9 @@ async function handleThoughtCreate(data) {
         })
         availableMonths.value.sort((a, b) => b.value.localeCompare(a.value))
       }
-      // Switch to the month
+      // Switch month if different (guard against scroll feedback)
       if (monthKey !== currentMonth.value) {
+        skipScrollWatch.value = true
         currentMonth.value = monthKey
       }
     }
