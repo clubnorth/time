@@ -18,6 +18,7 @@
     <AddEntryPanel :visible="showAddPanel" @close="showAddPanel = false" @select="handleSelect" />
     <ThoughtFormPanel :visible="showThoughtForm" :kind="thoughtKind" @cancel="showThoughtForm = false" @create="handleThoughtCreate" />
     <AssetFormPanel :visible="showAssetForm" @cancel="showAssetForm = false" @create="handleAssetCreate" />
+    <UricFormPanel :visible="showUricForm" @cancel="showUricForm = false" @create="handleUricCreate" />
   </div>
 </template>
 
@@ -29,6 +30,7 @@ import AddButton from './components/AddButton.vue'
 import ThoughtFormPanel from './components/ThoughtFormPanel.vue'
 import AddEntryPanel from './components/AddEntryPanel.vue'
 import AssetFormPanel from './components/AssetFormPanel.vue'
+import UricFormPanel from './components/UricFormPanel.vue'
 
 const API_BASE = 'http://localhost:8080'
 const PAGE_SIZE = 30
@@ -48,6 +50,7 @@ const showAddPanel = ref(false)
 const showThoughtForm = ref(false)
 const thoughtKind = ref('positive')
 const showAssetForm = ref(false)
+const showUricForm = ref(false)
 
 async function fetchEntries(limit, before) {
   let url = `${API_BASE}/api/entries?limit=${limit}`
@@ -116,16 +119,23 @@ const allGroups = computed(() => {
   for (const date of dates) {
     const entries = byDate[date]
       .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))
-      .map(e => ({
-        id: e.id,
-        time: e.recorded_at.substring(11, 16),
-        title: e.title,
-        description: e.type === 'asset'
-          ? '你现在的余额是 <span class="rainbow">' + (e.description || '0') + '</span> 元'
-          : e.description,
-        category: e.category,
-        isAsset: e.type === 'asset',
-      }))
+      .map(e => {
+        const isAsset = e.type === 'asset'
+        const isUric = e.type === 'uric'
+        return {
+          id: e.id,
+          time: e.recorded_at.substring(11, 16),
+          title: e.title,
+          description: isAsset
+            ? '你现在的余额是 <span class="rainbow">' + (e.description || '0') + '</span> 元'
+            : isUric
+              ? '你今天的尿酸值是 ' + (e.description || '0') + ' mol'
+              : e.description,
+          category: e.category,
+          isAsset,
+          isUric,
+        }
+      })
     
     const d = new Date(date)
     groups.push({
@@ -142,7 +152,40 @@ function handleAdd() { showAddPanel.value = true }
 function handleSelect(item) {
   if (item.kind) { thoughtKind.value = item.kind; showThoughtForm.value = true }
   else if (item.id === 'asset') { showAssetForm.value = true }
+  else if (item.id === 'uric') { showUricForm.value = true }
   else { showAddPanel.value = false }
+}
+
+async function handleUricCreate(data) {
+  const d = data.time
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const monthKey = `${y}-${m}`
+  const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
+
+  try {
+    const res = await fetch(`${API_BASE}/api/entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'uric',
+        title: '尿酸记录',
+        description: data.amount,
+        category: 'yellow',
+        recorded_at: recordedAt,
+      }),
+    })
+    if ((await res.json()).code === 0) {
+      await loadInitial()
+      skipScrollWatch.value = true
+      currentMonth.value = monthKey
+    }
+  } catch (e) {
+    console.error('Failed to create uric entry:', e)
+  }
+
+  showUricForm.value = false
 }
 
 async function handleAssetCreate(data) {
