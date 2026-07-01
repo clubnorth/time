@@ -255,6 +255,7 @@ async function handleUricCreate(data) {
   }
 
   showUricForm.value = false
+  showAddPanel.value = false
 }
 
 async function handleAssetCreate(data) {
