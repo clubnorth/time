@@ -34,7 +34,6 @@
           </div>
         </div>
 
-        <!-- Custom date-time picker -->
         <Transition name="picker">
           <div v-if="showTimeModal" class="picker-overlay" @click.self="closeTimePicker">
             <div class="picker-card">
@@ -47,39 +46,34 @@
                 </button>
               </div>
               <div class="picker-body">
-                <!-- 年 -->
                 <div class="picker-col">
-                  <button class="picker-arrow" @click="pickYear++" aria-label="年份加一">▲</button>
+                  <button class="picker-arrow" @click="pickYear++">▲</button>
                   <div class="picker-value picker-value-sm">{{ pickYear }}</div>
-                  <button class="picker-arrow" @click="pickYear--" aria-label="年份减一">▼</button>
+                  <button class="picker-arrow" @click="pickYear--">▼</button>
                   <span class="picker-unit">年</span>
                 </div>
-                <!-- 月 -->
                 <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustMonth(1)" aria-label="月份加一">▲</button>
+                  <button class="picker-arrow" @click="adjustMonth(1)">▲</button>
                   <div class="picker-value picker-value-sm">{{ pad(pickMonth) }}</div>
-                  <button class="picker-arrow" @click="adjustMonth(-1)" aria-label="月份减一">▼</button>
+                  <button class="picker-arrow" @click="adjustMonth(-1)">▼</button>
                   <span class="picker-unit">月</span>
                 </div>
-                <!-- 日 -->
                 <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustDay(1)" aria-label="日期加一">▲</button>
+                  <button class="picker-arrow" @click="adjustDay(1)">▲</button>
                   <div class="picker-value picker-value-sm">{{ pad(pickDay) }}</div>
-                  <button class="picker-arrow" @click="adjustDay(-1)" aria-label="日期减一">▼</button>
+                  <button class="picker-arrow" @click="adjustDay(-1)">▼</button>
                   <span class="picker-unit">日</span>
                 </div>
-                <!-- 时 -->
                 <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustHour(1)" aria-label="小时加一">▲</button>
+                  <button class="picker-arrow" @click="adjustHour(1)">▲</button>
                   <div class="picker-value">{{ pad(pickHour) }}</div>
-                  <button class="picker-arrow" @click="adjustHour(-1)" aria-label="小时减一">▼</button>
+                  <button class="picker-arrow" @click="adjustHour(-1)">▼</button>
                   <span class="picker-unit">时</span>
                 </div>
-                <!-- 分 -->
                 <div class="picker-col">
-                  <button class="picker-arrow" @click="adjustMinute(1)" aria-label="分钟加一">▲</button>
+                  <button class="picker-arrow" @click="adjustMinute(1)">▲</button>
                   <div class="picker-value">{{ pad(pickMinute) }}</div>
-                  <button class="picker-arrow" @click="adjustMinute(-1)" aria-label="分钟减一">▼</button>
+                  <button class="picker-arrow" @click="adjustMinute(-1)">▼</button>
                   <span class="picker-unit">分</span>
                 </div>
               </div>
@@ -182,7 +176,6 @@ function handleCreate() {
   })
 }
 </script>
-
 <style scoped>
 .form-overlay {
   position: fixed;
