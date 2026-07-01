@@ -222,6 +222,7 @@ async function handleExerciseCreate(data) {
   }
 
   showExerciseForm.value = false
+  showAddPanel.value = false
 }
 
 async function handleUricCreate(data) {
