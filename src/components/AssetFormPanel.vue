@@ -158,10 +158,10 @@ function adjustHour(delta) { pickHour.value = (pickHour.value + delta + 24) % 24
 function adjustMinute(delta) { pickMinute.value = (pickMinute.value + delta + 60) % 60 }
 
 function handleCreate() {
-  if (!amount.value.trim()) return
+  if (!String(amount.value).trim()) return
   emit('create', {
     time: currentTime.value,
-    amount: amount.value.trim(),
+    amount: String(amount.value).trim(),
   })
 }
 </script>
