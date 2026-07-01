@@ -108,9 +108,6 @@ defineProps({
   word-break: break-word;
 }
 
-.card-body.asset {
-  font-size: 15px;
-}
 .card-body {
   font-size: 13px;
   color: #666;
@@ -120,13 +117,14 @@ defineProps({
   text-align: left;
 }
 
-.rainbow {
+.card-body :deep(.rainbow) {
   font-weight: 700;
   background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000);
   background-size: 200% auto;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   animation: rainbow-flow 2s linear infinite;
 }
 
