@@ -150,7 +150,7 @@ defineEmits(['close', 'select'])
 
 const items = [
   { id: 'thought',    title: '念头',     subtitle: '记录一闪而过的想法',   color: '#9DB5C9' },
-  { id: 'memo',       title: '备忘录',   subtitle: '快速记下重要事项',     color: '#D4B87A' },
+  { id: 'asset',      title: '资产记录', subtitle: '记录资产变动',        color: '#D4B87A' },
   { id: 'diary',      title: '日记',     subtitle: '记录今天的点点滴滴',   color: '#8CAD8C' },
   { id: 'todo',       title: '待办事项', subtitle: '管理你的任务清单',     color: '#CF8B86' },
   { id: 'reading',    title: '读书',     subtitle: '记录阅读的书目与笔记', color: '#A099C4' },
