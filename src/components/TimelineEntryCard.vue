@@ -12,7 +12,7 @@
           <span class="cat-line" :class="'cat-' + (entry.category || 'yellow')"></span>
           <h3 class="card-title">{{ entry.title }}</h3>
         </div>
-        <p v-if="entry.description" class="card-body">{{ entry.description }}</p>
+        <p v-if="entry.description" class="card-body" :class="{ bold: entry.boldDesc }">{{ entry.description }}</p>
       </div>
     </div>
   </div>
@@ -105,6 +105,11 @@ defineProps({
   word-break: break-word;
 }
 
+.card-body.bold {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1a1a1a;
+}
 .card-body {
   font-size: 13px;
   color: #666;

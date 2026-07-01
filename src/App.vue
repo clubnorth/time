@@ -116,13 +116,17 @@ const allGroups = computed(() => {
   for (const date of dates) {
     const entries = byDate[date]
       .sort((a, b) => b.recorded_at.localeCompare(a.recorded_at))
-      .map(e => ({
-        id: e.id,
-        time: e.recorded_at.substring(11, 16),
-        title: e.title,
-        description: e.description,
-        category: e.category,
-      }))
+      .map(e => {
+        const isAsset = e.type === 'asset'
+        return {
+          id: e.id,
+          time: e.recorded_at.substring(11, 16),
+          title: isAsset ? '你现在的余额是' : e.title,
+          description: isAsset ? (e.description || '0') + ' 元' : e.description,
+          category: e.category,
+          boldDesc: isAsset,
+        }
+      })
     
     const d = new Date(date)
     groups.push({
