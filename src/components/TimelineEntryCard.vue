@@ -12,7 +12,10 @@
           <span class="cat-line" :class="'cat-' + (entry.category || 'yellow')"></span>
           <h3 class="card-title">{{ entry.title }}</h3>
         </div>
-        <p v-if="entry.description" class="card-body" :class="{ bold: entry.boldDesc }">{{ entry.description }}</p>
+        <p v-if="entry.description" class="card-body" :class="{ asset: entry.isAsset }">
+        <span v-if="entry.isAsset" v-html="entry.description"></span>
+        <template v-else>{{ entry.description }}</template>
+      </p>
       </div>
     </div>
   </div>
@@ -105,7 +108,7 @@ defineProps({
   word-break: break-word;
 }
 
-.card-body.bold {
+.card-body.asset {
   font-weight: 700;
   font-size: 15px;
   color: #1a1a1a;
@@ -117,5 +120,18 @@ defineProps({
   margin: 0;
   word-break: break-word;
   text-align: left;
+}
+
+.rainbow {
+  background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0000);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbow-flow 2s linear infinite;
+}
+
+@keyframes rainbow-flow {
+  to { background-position: 200% center; }
 }
 </style>
