@@ -138,7 +138,7 @@ const allGroups = computed(() => {
 function handleAdd() { showAddPanel.value = true }
 function handleSelect(item) {
   if (item.kind) { thoughtKind.value = item.kind; showThoughtForm.value = true }
-  else if (item.id === 'asset') { showAddPanel.value = false; showAssetForm.value = true }
+  else if (item.id === 'asset') { showAssetForm.value = true }
   else { showAddPanel.value = false }
 }
 

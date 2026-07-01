@@ -6,7 +6,7 @@
           <div class="form-navbar">
             <button class="form-nav-left" @click="$emit('cancel')">取消</button>
             <span class="form-nav-title">资产记录</span>
-            <button class="form-nav-right" @click="handleCreate" :disabled="!amount.trim()">新建</button>
+            <button class="form-nav-right" @click="handleCreate" :disabled="!String(amount).trim()">新建</button>
           </div>
 
           <div class="form-body">
@@ -179,7 +179,7 @@ function handleCreate() {
 .form-sheet {
   width: 100%;
   max-width: 480px;
-  height: 60%;
+  height: 68%;
   background: #f5f5f7;
   border-radius: 16px 16px 0 0;
   display: flex;
