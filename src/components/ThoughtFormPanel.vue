@@ -262,6 +262,7 @@ function handleCreate() {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   background: #ffffff;
   border-radius: 10px;
   padding: 14px 16px;
@@ -280,7 +281,7 @@ function handleCreate() {
 .form-time-arrow {
   color: #bbb;
   flex-shrink: 0;
-  margin-left: auto;
+  position: absolute; right: 16px;
 }
 
 .form-textarea {
