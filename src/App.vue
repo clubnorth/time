@@ -19,6 +19,7 @@
     <ThoughtFormPanel :visible="showThoughtForm" :kind="thoughtKind" @cancel="showThoughtForm = false" @create="handleThoughtCreate" />
     <AssetFormPanel :visible="showAssetForm" @cancel="showAssetForm = false" @create="handleAssetCreate" />
     <UricFormPanel :visible="showUricForm" @cancel="showUricForm = false" @create="handleUricCreate" />
+    <ExerciseFormPanel :visible="showExerciseForm" @cancel="showExerciseForm = false" @create="handleExerciseCreate" />
   </div>
 </template>
 
@@ -31,6 +32,7 @@ import ThoughtFormPanel from './components/ThoughtFormPanel.vue'
 import AddEntryPanel from './components/AddEntryPanel.vue'
 import AssetFormPanel from './components/AssetFormPanel.vue'
 import UricFormPanel from './components/UricFormPanel.vue'
+import ExerciseFormPanel from './components/ExerciseFormPanel.vue'
 
 const API_BASE = 'http://localhost:8080'
 const PAGE_SIZE = 30
@@ -51,6 +53,7 @@ const showThoughtForm = ref(false)
 const thoughtKind = ref('positive')
 const showAssetForm = ref(false)
 const showUricForm = ref(false)
+const showExerciseForm = ref(false)
 
 async function fetchEntries(limit, before) {
   let url = `${API_BASE}/api/entries?limit=${limit}`
@@ -122,15 +125,30 @@ const allGroups = computed(() => {
       .map(e => {
         const isAsset = e.type === 'asset'
         const isUric = e.type === 'uric'
+        const isExercise = e.type === 'exercise'
+        let title = e.title
+        let desc = e.description
+        if (isExercise) {
+          const sportName = e.title.replace('运动·', '')
+          desc = {
+            '跑步': '你今天跑步跑了 ' + e.description + ' 千米',
+            '骑行': '你今天骑行了 ' + e.description + ' 千米',
+            '俯卧撑': '你今天俯卧撑了 ' + e.description + ' 个',
+            '跳绳': '你今天跳绳了 ' + e.description + ' 个',
+            '游泳': '你今天游泳了 ' + e.description + ' 米',
+            '徒步': '你今天徒步了 ' + e.description + ' 公里',
+            '自由活动': '你今天自由活动了 ' + e.description + ' 分钟',
+          }[sportName] || (e.description + ' ' + sportName)
+        } else if (isAsset) {
+          desc = '你现在的余额是 <span class="rainbow">' + (e.description || '0') + '</span> 元'
+        } else if (isUric) {
+          desc = '你今天的尿酸值是 ' + (e.description || '0') + ' mol'
+        }
         return {
           id: e.id,
           time: e.recorded_at.substring(11, 16),
-          title: e.title,
-          description: isAsset
-            ? '你现在的余额是 <span class="rainbow">' + (e.description || '0') + '</span> 元'
-            : isUric
-              ? '你今天的尿酸值是 ' + (e.description || '0') + ' mol'
-              : e.description,
+          title: isExercise ? '运动·' + e.title.replace('运动·', '') : title,
+          description: desc,
           category: e.category,
           isAsset,
           isUric,
@@ -153,7 +171,40 @@ function handleSelect(item) {
   if (item.kind) { thoughtKind.value = item.kind; showThoughtForm.value = true }
   else if (item.id === 'asset') { showAssetForm.value = true }
   else if (item.id === 'uric') { showUricForm.value = true }
+  else if (item.id === 'exercise') { showExerciseForm.value = true }
   else { showAddPanel.value = false }
+}
+
+async function handleExerciseCreate(data) {
+  const d = data.time
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const monthKey = `${y}-${m}`
+  const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
+
+  try {
+    const res = await fetch(`${API_BASE}/api/entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'exercise',
+        title: '运动·' + data.sport,
+        description: data.amount,
+        category: 'green',
+        recorded_at: recordedAt,
+      }),
+    })
+    if ((await res.json()).code === 0) {
+      await loadInitial()
+      skipScrollWatch.value = true
+      currentMonth.value = monthKey
+    }
+  } catch (e) {
+    console.error('Failed to create exercise entry:', e)
+  }
+
+  showExerciseForm.value = false
 }
 
 async function handleUricCreate(data) {
