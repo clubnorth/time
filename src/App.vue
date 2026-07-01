@@ -288,6 +288,7 @@ async function handleAssetCreate(data) {
   }
 
   showAssetForm.value = false
+  showAddPanel.value = false
 }
 
 async function handleThoughtCreate(data) {
