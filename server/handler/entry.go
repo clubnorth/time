@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strconv"
   "encoding/json"
   "net/http"
   "time-server/service"
@@ -59,7 +60,17 @@ func (h *EntryHandler) GetEntries(w http.ResponseWriter, r *http.Request) {
 
 
 func (h *EntryHandler) GetAllEntries(w http.ResponseWriter, r *http.Request) {
-  entries, err := h.svc.GetAllEntries()
+  limitStr := r.URL.Query().Get("limit")
+  before := r.URL.Query().Get("before")
+
+  limit := 30
+  if limitStr != "" {
+    if n, err := strconv.Atoi(limitStr); err == nil && n > 0 && n <= 100 {
+      limit = n
+    }
+  }
+
+  entries, err := h.svc.GetEntriesPaginated(limit, before)
   if err != nil {
     respondError(w, 500, err.Error())
     return

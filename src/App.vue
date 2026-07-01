@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import YearMonthHeader from './components/YearMonthHeader.vue'
 import TimelineEntryGroup from './components/TimelineEntryGroup.vue'
 import AddButton from './components/AddButton.vue'
@@ -29,45 +29,75 @@ import ThoughtFormPanel from './components/ThoughtFormPanel.vue'
 import AddEntryPanel from './components/AddEntryPanel.vue'
 
 const API_BASE = 'http://localhost:8080'
+const PAGE_SIZE = 30
+const LOAD_MORE_SIZE = 20
+const SCROLL_THRESHOLD = 300
+
 const weekdays = ['日', '一', '二', '三', '四', '五', '六'].map(d => '周' + d)
 
-// Data
 const timelineData = ref([])
 const currentMonth = ref('')
 const availableMonths = ref([])
 const skipScrollWatch = ref(false)
+const isLoading = ref(false)
+const hasMore = ref(true)
 
 const showAddPanel = ref(false)
 const showThoughtForm = ref(false)
 const thoughtKind = ref('positive')
 
-async function fetchAllEntries() {
+async function fetchEntries(limit, before) {
+  let url = `${API_BASE}/api/entries?limit=${limit}`
+  if (before) url += `&before=${encodeURIComponent(before)}`
   try {
-    const res = await fetch(`${API_BASE}/api/entries`)
+    const res = await fetch(url)
     const json = await res.json()
     if (json.code === 0 && Array.isArray(json.data)) {
-      timelineData.value = json.data
-      // Derive months from data
-      const months = new Set()
-      for (const e of json.data) {
-        months.add(e.recorded_at.substring(0, 7))
-      }
-      const sorted = [...months].sort().reverse()
-      availableMonths.value = sorted.map(m => ({
-        label: `${m.substring(0,4)}年${parseInt(m.substring(5,7))}月`,
-        value: m,
-      }))
-      // Set current month to the first available
-      if (sorted.length > 0 && !currentMonth.value) {
-        currentMonth.value = sorted[0]
-      }
+      return json.data
     }
   } catch (e) {
     console.error('Failed to fetch entries:', e)
   }
+  return []
 }
 
-// Convert entries to timeline groups (all data, sorted by time)
+function rebuildMonths(data) {
+  const months = new Set()
+  for (const e of data) {
+    months.add(e.recorded_at.substring(0, 7))
+  }
+  const sorted = [...months].sort().reverse()
+  availableMonths.value = sorted.map(m => ({
+    label: `${m.substring(0,4)}年${parseInt(m.substring(5,7))}月`,
+    value: m,
+  }))
+  if (sorted.length > 0 && !currentMonth.value) {
+    currentMonth.value = sorted[0]
+  }
+}
+
+async function loadInitial() {
+  isLoading.value = true
+  const data = await fetchEntries(PAGE_SIZE, '')
+  timelineData.value = data
+  hasMore.value = data.length >= PAGE_SIZE
+  rebuildMonths(data)
+  isLoading.value = false
+}
+
+async function loadMore() {
+  if (isLoading.value || !hasMore.value) return
+  const oldest = timelineData.value[timelineData.value.length - 1]
+  if (!oldest) return
+
+  isLoading.value = true
+  const data = await fetchEntries(LOAD_MORE_SIZE, oldest.recorded_at)
+  if (data.length < LOAD_MORE_SIZE) hasMore.value = false
+  timelineData.value = [...timelineData.value, ...data]
+  rebuildMonths([...timelineData.value])
+  isLoading.value = false
+}
+
 const allGroups = computed(() => {
   if (timelineData.value.length === 0) return []
   
@@ -116,24 +146,21 @@ async function handleThoughtCreate(data) {
   const monthKey = `${y}-${m}`
   const recordedAt = `${monthKey}-${day} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`
 
-  const entry = {
-    type: 'thought',
-    title: data.kind === 'positive' ? '念头·正' : '念头·负',
-    description: data.note,
-    category: data.kind === 'positive' ? 'green' : 'red',
-    valence: data.kind,
-    recorded_at: recordedAt,
-  }
-
   try {
     const res = await fetch(`${API_BASE}/api/entries`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry),
+      body: JSON.stringify({
+        type: 'thought',
+        title: data.kind === 'positive' ? '念头·正' : '念头·负',
+        description: data.note,
+        category: data.kind === 'positive' ? 'green' : 'red',
+        valence: data.kind,
+        recorded_at: recordedAt,
+      }),
     })
-    const json = await res.json()
-    if (json.code === 0) {
-      await fetchAllEntries()
+    if ((await res.json()).code === 0) {
+      await loadInitial()
       skipScrollWatch.value = true
       currentMonth.value = monthKey
     }
@@ -146,6 +173,7 @@ async function handleThoughtCreate(data) {
 }
 
 function handleScroll() {
+  // Scroll-triggered month detection
   const dots = document.querySelectorAll('[data-date]')
   for (const dot of dots) {
     const rect = dot.getBoundingClientRect()
@@ -158,6 +186,12 @@ function handleScroll() {
       }
       break
     }
+  }
+  // Load more when near bottom
+  const scrollBottom = window.innerHeight + window.scrollY
+  const docHeight = document.documentElement.scrollHeight
+  if (docHeight - scrollBottom < SCROLL_THRESHOLD) {
+    loadMore()
   }
 }
 
@@ -174,7 +208,7 @@ watch(currentMonth, (newMonth) => {
 })
 
 onMounted(() => {
-  fetchAllEntries()
+  loadInitial()
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 

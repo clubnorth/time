@@ -46,9 +46,19 @@ func (s *EntryService) GetEntriesByMonth(month string) ([]Entry, error) {
 }
 
 
-func (s *EntryService) GetAllEntries() ([]Entry, error) {
-  query := "SELECT id, type, title, description, category, valence, recorded_at, created_at, updated_at FROM entries ORDER BY recorded_at DESC, id DESC"
-  rows, err := s.db.Query(query)
+func (s *EntryService) GetEntriesPaginated(limit int, before string) ([]Entry, error) {
+  var query string
+  var args []interface{}
+
+  if before == "" {
+    query = "SELECT id, type, title, description, category, valence, recorded_at, created_at, updated_at FROM entries ORDER BY recorded_at DESC, id DESC LIMIT ?"
+    args = []interface{}{limit}
+  } else {
+    query = "SELECT id, type, title, description, category, valence, recorded_at, created_at, updated_at FROM entries WHERE recorded_at < ? ORDER BY recorded_at DESC, id DESC LIMIT ?"
+    args = []interface{}{before, limit}
+  }
+
+  rows, err := s.db.Query(query, args...)
   if err != nil {
     return nil, err
   }
