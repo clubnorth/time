@@ -32,25 +32,27 @@
           <span class="heatmap-title">{{ cat.name }}</span>
           <span class="heatmap-count">{{ cat.count }}次</span>
         </div>
-        <div class="heatmap-body">
-          <div class="heatmap-scroll" ref="scrollRef">
-            <div class="heatmap-grid" v-for="(week, wi) in cat.weeks" :key="wi">
-              <div v-for="(day, di) in week" :key="di" class="heatmap-cell" :class="day ? { filled: day.filled, today: day.isToday } : {}" :style="day && day.filled ? { background: cat.color } : {}" :title="day ? day.date : ''">
-                <template v-if="day">
-                  <span v-if="day.label" class="cell-label">{{ day.label }}</span>
-                  <span v-if="day.dateNum" class="cell-datenum">{{ day.dateNum }}</span>
-                </template>
+        <div class="hm-scroll" ref="hmScroll">
+            <div class="hm-weeks" v-for="(week, wi) in cat.weeks" :key="wi">
+              <div v-for="(day, di) in week" :key="di"
+                v-if="day"
+                class="hm-cell"
+                :class="{ filled: day.filled, today: day.isToday }"
+                :style="day.filled ? { background: cat.color } : {}"
+                :title="day.date"
+              >
+                <span class="hm-date">{{ day.dateNum }}</span>
+                <span class="hm-month">{{ day.label }}</span>
               </div>
+              <div v-for="n in (7 - week.filter(d => d).length)" :key="'e' + n" class="hm-cell hm-empty"></div>
             </div>
-          </div>
-        </div>
-      </div>
+          </div></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 
 const emit = defineEmits(['back'])
 const period = ref('year')
@@ -178,7 +180,7 @@ const categoryData = computed(() => {
   })
 })
 
-watch(categoryData, () => nextTick(() => scrollBodies()))
+
 async function fetchAll() {
   try {
     const res = await fetch(`${API_BASE}/api/entries?limit=500`)
@@ -187,9 +189,9 @@ async function fetchAll() {
   } catch (e) { console.error(e) }
 }
 
-onMounted(() => { fetchAll(); scrollBodies() })
+onMounted(async () => { await fetchAll(); nextTick(() => { const el = document.querySelector('.hm-scroll'); if (el) el.scrollLeft = el.scrollWidth }) })
 
-function scrollBodies() { setTimeout(() => document.querySelectorAll('.heatmap-body').forEach(b => b.scrollLeft = b.scrollWidth), 100) }
+
 
 function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 </script>
@@ -214,23 +216,21 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .year-arrow { width: 28px; height: 28px; border: 1px solid #e0e0e0; border-radius: 50%; background: #fff; color: #666; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .year-text { font-size: 15px; font-weight: 600; color: #1a1a1a; }
 
+
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; overflow: hidden; }
-.heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; }
+.heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
 .heatmap-count { margin-left: auto; font-size: 12px; color: #999; }
 
-.heatmap-body { display: flex; gap: 3px; }
-.heatmap-weekdays { display: flex; flex-direction: column; gap: 2px; padding-top: 1px; flex-shrink: 0; }
-.heatmap-weekdays span { font-size: 9px; color: #ccc; height: 14px; line-height: 14px; text-align: right; width: 16px; }
-
-.heatmap-scroll::-webkit-scrollbar { display: none; }
-.heatmap-scroll { display: flex; gap: 3px; overflow-x: auto; cursor: grab; user-select: none; direction: rtl; scrollbar-width: none; }
-.heatmap-grid { display: flex; flex-direction: column; gap: 3px; direction: ltr; }
-.heatmap-cell { width: 20px; height: 20px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.heatmap-cell.filled { background: #ccc; }
-.heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
-.cell-label { font-size: 7px; color: #888; line-height: 1; pointer-events: none; text-align: center; }
-.cell-datenum { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 7px; color: #999; line-height: 1; pointer-events: none; }
-</style>
+.hm-scroll { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; }
+.hm-scroll::-webkit-scrollbar { display: none; }
+.hm-weeks { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+.hm-cell { width: 20px; height: 20px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.hm-cell.filled {  }
+.hm-cell.today { box-shadow: inset 0 0 0 2px #333; }
+.hm-cell.hm-empty { background: transparent; }
+.hm-date { font-size: 8px; color: #999; line-height: 1; }
+.hm-month { position: absolute; top: 1px; left: 1px; font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
+</style></style>
