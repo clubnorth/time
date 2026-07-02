@@ -233,4 +233,4 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .hm-cell.hm-empty { background: transparent; }
 .hm-date { font-size: 8px; color: #999; line-height: 1; }
 .hm-month { position: absolute; top: 1px; left: 1px; font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
-</style></style>
+</style>
