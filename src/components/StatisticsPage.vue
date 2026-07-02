@@ -214,7 +214,7 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .year-text { font-size: 15px; font-weight: 600; color: #1a1a1a; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 14px 10px; }
+.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
@@ -225,11 +225,11 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .heatmap-weekdays span { font-size: 9px; color: #ccc; height: 14px; line-height: 14px; text-align: right; width: 16px; }
 
 .heatmap-scroll::-webkit-scrollbar { display: none; }
-.heatmap-scroll { display: flex; gap: 2px; overflow-x: auto; cursor: grab; user-select: none; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.heatmap-grid { display: flex; flex-direction: column; gap: 2px; }
-.heatmap-cell { width: 14px; height: 14px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.heatmap-scroll { display: flex; gap: 1px; overflow-x: auto; cursor: grab; user-select: none; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: flex-end; }
+.heatmap-grid { display: flex; flex-direction: column; gap: 1px; }
+.heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
-.cell-label { font-size: 7px; color: #666; line-height: 1; pointer-events: none; }
-.cell-datenum { position: absolute; bottom: 0; right: 1px; font-size: 6px; color: #999; line-height: 1; pointer-events: none; }
+.cell-label { font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
+.cell-datenum { position: absolute; bottom: -1px; right: 1px; font-size: 5px; color: #bbb; line-height: 1; pointer-events: none; }
 </style>
