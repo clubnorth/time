@@ -150,12 +150,12 @@ onMounted(fetchAll)
 .period-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 0 0 1px #e0e0e0; }
 
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-.stat-card { background: #fafafa; border-radius: 14px; padding: 20px 16px; display: flex; flex-direction: column; gap: 6px; aspect-ratio: 1; justify-content: center; }
+.stat-card { background: #fafafa; border-radius: 14px; padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; }
 .stat-value { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .stat-label { font-size: 13px; color: #999; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 14px 12px; }
+.heatmap-card { background: #fafafa; border-radius: 14px; padding: 14px 36px; }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
