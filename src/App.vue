@@ -1,4 +1,4 @@
-</div><template>
+<template>
   <div class="app-shell">
     <YearMonthHeader v-model="currentMonth" :months="availableMonths" />
 
