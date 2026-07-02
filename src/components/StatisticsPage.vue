@@ -227,7 +227,7 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .heatmap-scroll::-webkit-scrollbar { display: none; }
 .heatmap-scroll { display: flex; gap: 1px; overflow-x: auto; cursor: grab; user-select: none; -webkit-overflow-scrolling: touch; scrollbar-width: none; justify-content: flex-end; }
 .heatmap-grid { display: flex; flex-direction: column; gap: 1px; }
-.heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.heatmap-cell { width: 24px; height: 24px; border-radius: 4px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
 .cell-label { font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
