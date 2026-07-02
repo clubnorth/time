@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 
 const emit = defineEmits(['back'])
 const period = ref('year')
@@ -178,6 +178,7 @@ const categoryData = computed(() => {
   })
 })
 
+watch(categoryData, () => nextTick(() => scrollBodies()))
 async function fetchAll() {
   try {
     const res = await fetch(`${API_BASE}/api/entries?limit=500`)
@@ -186,7 +187,9 @@ async function fetchAll() {
   } catch (e) { console.error(e) }
 }
 
-onMounted(fetchAll)
+onMounted(() => { fetchAll(); scrollBodies() })
+
+function scrollBodies() { setTimeout(() => document.querySelectorAll('.heatmap-body').forEach(b => b.scrollLeft = b.scrollWidth), 100) }
 
 function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 </script>
@@ -212,7 +215,7 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .year-text { font-size: 15px; font-weight: 600; color: #1a1a1a; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; }
+.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; overflow: hidden; }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
@@ -225,9 +228,9 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .heatmap-scroll::-webkit-scrollbar { display: none; }
 .heatmap-scroll { display: flex; gap: 3px; overflow-x: auto; cursor: grab; user-select: none; direction: rtl; scrollbar-width: none; }
 .heatmap-grid { display: flex; flex-direction: column; gap: 3px; direction: ltr; }
-.heatmap-cell { width: 20px; height: 20px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.heatmap-cell { width: 20px; height: 20px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
 .cell-label { font-size: 7px; color: #888; line-height: 1; pointer-events: none; text-align: center; }
-.cell-datenum { position: absolute; bottom: -1px; right: 1px; font-size: 5px; color: #bbb; line-height: 1; pointer-events: none; }
+.cell-datenum { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 7px; color: #999; line-height: 1; pointer-events: none; }
 </style>
