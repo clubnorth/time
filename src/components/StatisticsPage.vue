@@ -131,9 +131,8 @@ onMounted(fetchAll)
 .stats-page {
   min-height: 100dvh;
   background: #fff;
-  padding: 0 24px 60px;
-  max-width: 480px;
-  margin: 0 auto;
+  padding: 0 16px 60px;
+  width: 100%;
 }
 
 .stats-header {
@@ -150,9 +149,9 @@ onMounted(fetchAll)
 .period-btn { flex: 1; padding: 6px 0; text-align: center; font-size: 13px; color: #999; background: none; border: none; border-radius: 6px; cursor: pointer; }
 .period-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 0 0 1px #e0e0e0; }
 
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-.stat-card { background: #fafafa; border-radius: 14px; padding: 16px 14px; display: flex; flex-direction: column; gap: 4px; }
-.stat-value { font-size: 30px; font-weight: 700; color: #1a1a1a; line-height: 1.1; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #fafafa; border-radius: 14px; padding: 20px 16px; display: flex; flex-direction: column; gap: 6px; aspect-ratio: 1; justify-content: center; }
+.stat-value { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .stat-label { font-size: 13px; color: #999; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
