@@ -1,8 +1,8 @@
-<template>
+</div><template>
   <div class="app-shell">
     <YearMonthHeader v-model="currentMonth" :months="availableMonths" />
 
-    <div class="timeline-container">
+    <div class="timeline-container" v-if="!showStats">
       <div class="timeline-line"></div>
 
       <TimelineEntryGroup
@@ -41,6 +41,7 @@ import AddEntryPanel from './components/AddEntryPanel.vue'
 import AssetFormPanel from './components/AssetFormPanel.vue'
 import UricFormPanel from './components/UricFormPanel.vue'
 import ExerciseFormPanel from './components/ExerciseFormPanel.vue'
+import StatisticsPage from './components/StatisticsPage.vue'
 
 const API_BASE = 'http://localhost:8080'
 const PAGE_SIZE = 30
@@ -62,6 +63,7 @@ const thoughtKind = ref('positive')
 const showAssetForm = ref(false)
 const showUricForm = ref(false)
 const showExerciseForm = ref(false)
+const showStats = ref(false)
 
 async function fetchEntries(limit, before) {
   let url = `${API_BASE}/api/entries?limit=${limit}`
