@@ -38,14 +38,11 @@
           </div>
           <div class="heatmap-scroll">
             <div class="heatmap-grid" v-for="(week, wi) in cat.weeks" :key="wi">
-              <div v-for="(day, di) in week" :key="di"
-                class="heatmap-cell"
-                :class="{ filled: day.filled, today: day.isToday }"
-                :style="day.filled ? { background: cat.color } : {}"
-                :title="day.date"
-              >
-                <span v-if="day.label" class="cell-label">{{ day.label }}</span>
-                <span v-if="day.dateNum" class="cell-datenum">{{ day.dateNum }}</span>
+              <div v-for="(day, di) in week" :key="di" class="heatmap-cell" :class="day ? { filled: day.filled, today: day.isToday } : {}" :style="day && day.filled ? { background: cat.color } : {}" :title="day ? day.date : ''">
+                <template v-if="day">
+                  <span v-if="day.label" class="cell-label">{{ day.label }}</span>
+                  <span v-if="day.dateNum" class="cell-datenum">{{ day.dateNum }}</span>
+                </template>
               </div>
             </div>
           </div>
