@@ -219,7 +219,7 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; }
+.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; overflow: hidden; }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
