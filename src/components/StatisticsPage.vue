@@ -34,8 +34,8 @@
         </div>
         <div class="hm-scroll" ref="hmScroll">
             <div class="hm-weeks" v-for="(week, wi) in cat.weeks" :key="wi">
-              <div v-for="(day, di) in week" :key="di"
-                v-if="day"
+              <template v-for="(day, di) in week" :key="di">
+              <div v-if="day"
                 class="hm-cell"
                 :class="{ filled: day.filled, today: day.isToday }"
                 :style="day.filled ? { background: cat.color } : {}"
@@ -44,6 +44,7 @@
                 <span class="hm-date">{{ day.dateNum }}</span>
                 <span class="hm-month">{{ day.label }}</span>
               </div>
+              </template>
               <div v-for="n in (7 - week.filter(d => d).length)" :key="'e' + n" class="hm-cell hm-empty"></div>
             </div>
           </div></div>
