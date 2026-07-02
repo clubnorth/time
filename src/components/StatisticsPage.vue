@@ -10,16 +10,16 @@
     </div>
 
     <!-- Period selector -->
-    <div class="period-bar">
-      <button v-for="p in periods" :key="p" class="period-btn" :class="{ active: period === p }" @click="period = p">{{ periodLabels[p] }}</button>
-    </div>
-
-    <!-- Top stat cards 2x2 -->
     <div class="stat-grid">
       <div class="stat-card" v-for="s in topStats" :key="s.label">
         <span class="stat-value">{{ s.value }}</span>
         <span class="stat-label">{{ s.label }}</span>
       </div>
+    </div>
+
+    <!-- Top stat cards 2x2 -->
+    <div class="period-bar">
+      <button v-for="p in periods" :key="p" class="period-btn" :class="{ active: period === p }" @click="period = p">{{ periodLabels[p] }}</button>
     </div>
 
     <!-- Category heatmap cards -->
@@ -51,7 +51,7 @@ import { ref, computed, onMounted } from 'vue'
 
 const emit = defineEmits(['back'])
 
-const period = ref('month')
+const period = ref('year')
 const periods = ['week', 'month', 'year']
 const periodLabels = { week: '周', month: '月', year: '年' }
 
@@ -151,7 +151,7 @@ onMounted(fetchAll)
 .period-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 0 0 1px #e0e0e0; }
 
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
-.stat-card { background: #fafafa; border-radius: 16px; padding: 20px 18px; display: flex; flex-direction: column; gap: 6px; aspect-ratio: 1.4; justify-content: center; }
+.stat-card { background: #fafafa; border-radius: 16px; padding: 20px 18px; display: flex; flex-direction: column; gap: 6px; min-height: 80px; }
 .stat-value { font-size: 32px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .stat-label { font-size: 13px; color: #999; }
 
