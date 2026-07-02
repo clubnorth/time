@@ -461,3 +461,47 @@ npm run preview      # 预览生产构建
 
 ### 已知问题
 - 部分组件中文偶现乱码（PowerShell `Set-Content -Encoding UTF8` BOM 污染），需用 Node.js `WriteAllText(noBOM)` 重建
+
+
+---
+
+## 2026-07-02 迭代记录
+
+### 统计页面
+- 新增 StatisticsPage.vue，点击底部栏"统计"按钮进入
+- 顶部 2x2 网格展示：总记录 / 本月 / 今日 / 最长连续天数
+- 周/月/年分段切换标签，年份箭头导航不可超过当前年
+- 日历热力图：7行(周日到周六) x N列(周)，20px方块间距3px
+  - 最左 = 该年第一周，最右 = 当前周
+  - 月初方块标注"一""二"等，月末方块标注日期数字
+  - 有记录 = 分类颜色，无记录 = 浅灰，今天 = 深色边框
+  - 年份不可选未来年份
+
+### 底部栏
+- 移除统计页的 YearMonthHeader
+- 底部栏在统计页保留显示
+- 统计/待办事项按钮：图标在上文字在下，居中排列
+
+### 快捷打卡
+- 自律/禁止糖分：一天限打卡一次
+- getConsecutiveDay 返回 -1 表示今天已打卡
+
+### 运动卡路里
+- MET 公式（体重70kg），存入 valence 字段
+- 卡片追加"本次消耗 XX 卡"
+
+### 已知问题 & 待解决
+
+1. **热力图滚动**：scrollbar-width: none 隐藏滚动条后浏览器不再转发拖拽手势给滚动容器，需自行实现 pointerdown/pointermove 手动模拟 scrollLeft。
+
+2. **溢出链**：overflow-x: auto 生效需要父容器用 overflow: hidden 约束宽度，否则子内容撑开父级导致无溢出。
+
+3. **v-if + v-for 同元素**：Vue 3 中 v-if 优先级高于 v-for，需用 template 标签包裹。
+
+4. **scoped CSS + v-html**：.rainbow 类不被 scoped 选择器匹配（v-html 内容无 data-v-xxx 属性），需用 :deep() 穿透。
+
+5. **input type=number**：v-model 绑定返回 Number 类型，.trim() 报错，需 String().trim()。
+
+6. **中文乱码**：PowerShell Set-Content -Encoding UTF8 添加 BOM 导致文件中文损坏，需用 Node.js WriteAllText(无BOM) 或纯 ASCII \u 转义。
+
+7. **CRLF/LF**：Windows CRLF 换行导致正则 \n 不匹配，需用实际 byte sequence 或统一 LF。
