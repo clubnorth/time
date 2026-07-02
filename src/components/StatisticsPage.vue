@@ -33,7 +33,7 @@
           <span class="heatmap-count">{{ cat.count }}次</span>
         </div>
         <div class="heatmap-body">
-          <div class="heatmap-scroll">
+          <div class="heatmap-scroll" ref="scrollRef">
             <div class="heatmap-grid" v-for="(week, wi) in cat.weeks" :key="wi">
               <div v-for="(day, di) in week" :key="di" class="heatmap-cell" :class="day ? { filled: day.filled, today: day.isToday } : {}" :style="day && day.filled ? { background: cat.color } : {}" :title="day ? day.date : ''">
                 <template v-if="day">
@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 
 const emit = defineEmits(['back'])
 const period = ref('year')
@@ -58,6 +58,7 @@ const year = ref(new Date().getFullYear())
 const maxYear = ref(new Date().getFullYear())
 const periods = ['week', 'month', 'year']
 const periodLabels = { week: '周', month: '月', year: '年' }
+const scrollRef = ref(null)
 const API_BASE = 'http://localhost:8080'
 const allEntries = ref([])
 
@@ -186,7 +187,10 @@ async function fetchAll() {
   } catch (e) { console.error(e) }
 }
 
-onMounted(fetchAll)
+watch(categoryData, () => { nextTick(() => { if (scrollRef.value) scrollRef.value.scrollLeft = scrollRef.value.scrollWidth }) })
+onMounted(() => { fetchAll() })
+
+function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 </script>
 
 <style scoped>
@@ -227,5 +231,5 @@ onMounted(fetchAll)
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
 .cell-label { font-size: 7px; color: #666; line-height: 1; pointer-events: none; }
-.cell-datenum { display: none; }
+.cell-datenum { position: absolute; bottom: 0; right: 1px; font-size: 6px; color: #999; line-height: 1; pointer-events: none; }
 </style>
