@@ -22,7 +22,7 @@
     <div class="year-nav">
       <button class="year-arrow" @click="year--">&lt;</button>
       <span class="year-text">{{ year }}</span>
-      <button class="year-arrow" @click="year++">&gt;</button>
+      <button class="year-arrow" @click="year++" :disabled="year >= maxYear">&gt;</button>
     </div>
 
     <div class="heatmaps">
@@ -33,9 +33,6 @@
           <span class="heatmap-count">{{ cat.count }}次</span>
         </div>
         <div class="heatmap-body">
-          <div class="heatmap-weekdays">
-            <span v-for="w in weekLabels" :key="w">{{ w }}</span>
-          </div>
           <div class="heatmap-scroll">
             <div class="heatmap-grid" v-for="(week, wi) in cat.weeks" :key="wi">
               <div v-for="(day, di) in week" :key="di" class="heatmap-cell" :class="day ? { filled: day.filled, today: day.isToday } : {}" :style="day && day.filled ? { background: cat.color } : {}" :title="day ? day.date : ''">
@@ -58,9 +55,9 @@ import { ref, computed, onMounted } from 'vue'
 const emit = defineEmits(['back'])
 const period = ref('year')
 const year = ref(new Date().getFullYear())
+const maxYear = ref(new Date().getFullYear())
 const periods = ['week', 'month', 'year']
 const periodLabels = { week: '周', month: '月', year: '年' }
-const weekLabels = ['日', '一', '二', '三', '四', '五', '六']
 const API_BASE = 'http://localhost:8080'
 const allEntries = ref([])
 
@@ -73,7 +70,7 @@ const categories = [
   { type: 'nosugar',  name: '禁止糖分', color: '#C88C8C' },
 ]
 
-const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月']
+const monthNames = ['一','二','三','四','五','六','七','八','九','十','十一','十二']
 
 function buildHeatmapWeeks(entries, y) {
   const filledSet = new Set(entries.map(e => e.recorded_at.substring(0, 10)))
@@ -213,7 +210,7 @@ onMounted(fetchAll)
 .year-text { font-size: 15px; font-weight: 600; color: #1a1a1a; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 14px 36px; }
+.heatmap-card { background: #fafafa; border-radius: 14px; padding: 14px 10px; }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
@@ -223,11 +220,12 @@ onMounted(fetchAll)
 .heatmap-weekdays { display: flex; flex-direction: column; gap: 2px; padding-top: 1px; flex-shrink: 0; }
 .heatmap-weekdays span { font-size: 9px; color: #ccc; height: 14px; line-height: 14px; text-align: right; width: 16px; }
 
-.heatmap-scroll { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 4px; }
+.heatmap-scroll::-webkit-scrollbar { display: none; }
+.heatmap-scroll { display: flex; gap: 2px; overflow-x: auto; cursor: grab; user-select: none; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .heatmap-grid { display: flex; flex-direction: column; gap: 2px; }
-.heatmap-cell { width: 14px; height: 14px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; }
+.heatmap-cell { width: 14px; height: 14px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
-.cell-label { position: absolute; top: -1px; left: 1px; font-size: 7px; color: #999; line-height: 1; pointer-events: none; white-space: nowrap; }
-.cell-datenum { position: absolute; bottom: -1px; right: 1px; font-size: 7px; color: #999; line-height: 1; pointer-events: none; }
+.cell-label { font-size: 7px; color: #666; line-height: 1; pointer-events: none; }
+.cell-datenum { display: none; }
 </style>
