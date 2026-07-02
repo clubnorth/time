@@ -131,7 +131,7 @@ onMounted(fetchAll)
 .stats-page {
   min-height: 100dvh;
   background: #fff;
-  padding: 0 16px 60px;
+  padding: 0 32px 60px;
   width: 100%;
 }
 
