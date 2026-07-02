@@ -150,20 +150,20 @@ onMounted(fetchAll)
 .period-btn { flex: 1; padding: 6px 0; text-align: center; font-size: 13px; color: #999; background: none; border: none; border-radius: 6px; cursor: pointer; }
 .period-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 0 0 1px #e0e0e0; }
 
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
-.stat-card { background: #fafafa; border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 4px; }
-.stat-value { font-size: 28px; font-weight: 700; color: #1a1a1a; }
-.stat-label { font-size: 12px; color: #999; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+.stat-card { background: #fafafa; border-radius: 16px; padding: 20px 18px; display: flex; flex-direction: column; gap: 6px; aspect-ratio: 1.4; justify-content: center; }
+.stat-value { font-size: 32px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+.stat-label { font-size: 13px; color: #999; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 16px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 14px; }
+.heatmap-card { background: #fafafa; border-radius: 16px; padding: 18px 16px; }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
 .heatmap-count { margin-left: auto; font-size: 12px; color: #999; }
 
 .heatmap-grid { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 4px; }
-.heatmap-cell { width: 10px; height: 10px; border-radius: 2px; }
+.heatmap-cell { width: 11px; height: 11px; border-radius: 3px; }
 .heatmap-cell.filled { opacity: 0.9; }
 
 .heatmap-months { display: flex; justify-content: space-between; padding: 0 1px; }

@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <YearMonthHeader v-model="currentMonth" :months="availableMonths" />
+    <YearMonthHeader v-if="!showStats" v-model="currentMonth" :months="availableMonths" />
 
     <div class="timeline-container" v-if="!showStats">
       <div class="timeline-line"></div>
