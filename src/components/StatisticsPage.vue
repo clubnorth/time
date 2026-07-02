@@ -199,7 +199,7 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .header-spacer { width: 32px; }
 
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-.stat-card { background: #fafafa; border-radius: 14px; padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; }
+.stat-card { background: #fafafa; border-radius: 14px; padding: 18px 14px; display: flex; flex-direction: column; gap: 3px; }
 .stat-value { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; }
 .stat-label { font-size: 13px; color: #999; }
 
@@ -218,16 +218,16 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
 .heatmap-count { margin-left: auto; font-size: 12px; color: #999; }
 
-.heatmap-body { display: flex; gap: 4px; }
+.heatmap-body { display: flex; gap: 3px; }
 .heatmap-weekdays { display: flex; flex-direction: column; gap: 2px; padding-top: 1px; flex-shrink: 0; }
 .heatmap-weekdays span { font-size: 9px; color: #ccc; height: 14px; line-height: 14px; text-align: right; width: 16px; }
 
 .heatmap-scroll::-webkit-scrollbar { display: none; }
-.heatmap-scroll { display: flex; gap: 4px; overflow-x: auto; cursor: grab; user-select: none; direction: rtl; scrollbar-width: none; }
-.heatmap-grid { display: flex; flex-direction: column; gap: 4px; direction: ltr; }
-.heatmap-cell { width: 18px; height: 18px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.heatmap-scroll { display: flex; gap: 3px; overflow-x: auto; cursor: grab; user-select: none; direction: rtl; scrollbar-width: none; }
+.heatmap-grid { display: flex; flex-direction: column; gap: 3px; direction: ltr; }
+.heatmap-cell { width: 20px; height: 20px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
-.cell-label { font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
+.cell-label { font-size: 7px; color: #888; line-height: 1; pointer-events: none; text-align: center; }
 .cell-datenum { position: absolute; bottom: -1px; right: 1px; font-size: 5px; color: #bbb; line-height: 1; pointer-events: none; }
 </style>
