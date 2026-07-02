@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const emit = defineEmits(['back'])
 const period = ref('year')
@@ -58,7 +58,6 @@ const year = ref(new Date().getFullYear())
 const maxYear = ref(new Date().getFullYear())
 const periods = ['week', 'month', 'year']
 const periodLabels = { week: '周', month: '月', year: '年' }
-const scrollRef = ref(null)
 const API_BASE = 'http://localhost:8080'
 const allEntries = ref([])
 
@@ -187,8 +186,7 @@ async function fetchAll() {
   } catch (e) { console.error(e) }
 }
 
-watch(categoryData, () => { nextTick(() => { if (scrollRef.value) scrollRef.value.scrollLeft = scrollRef.value.scrollWidth }) })
-onMounted(() => { fetchAll() })
+onMounted(fetchAll)
 
 function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 </script>
@@ -225,9 +223,9 @@ function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 .heatmap-weekdays span { font-size: 9px; color: #ccc; height: 14px; line-height: 14px; text-align: right; width: 16px; }
 
 .heatmap-scroll::-webkit-scrollbar { display: none; }
-.heatmap-scroll { display: flex; gap: 2px; overflow-x: auto; cursor: grab; user-select: none; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.heatmap-grid { display: flex; flex-direction: column; gap: 2px; }
-.heatmap-cell { width: 36px; height: 36px; border-radius: 5px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.heatmap-scroll { display: flex; gap: 4px; overflow-x: auto; cursor: grab; user-select: none; direction: rtl; scrollbar-width: none; }
+.heatmap-grid { display: flex; flex-direction: column; gap: 4px; direction: ltr; }
+.heatmap-cell { width: 18px; height: 18px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .heatmap-cell.filled { background: #ccc; }
 .heatmap-cell.today { box-shadow: inset 0 0 0 1.5px #333; }
 .cell-label { font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
