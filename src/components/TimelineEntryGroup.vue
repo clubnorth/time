@@ -15,6 +15,7 @@
       v-for="entry in group.entries"
       :key="entry.id"
       :entry="entry"
+      @delete-entry="(id) => $emit('delete-entry', id)"
     />
   </div>
 </template>
@@ -22,6 +23,8 @@
 <script setup>
 import { computed } from 'vue'
 import TimelineEntryCard from './TimelineEntryCard.vue'
+
+defineEmits(['delete-entry'])
 
 const props = defineProps({
   group: Object
@@ -54,11 +57,19 @@ const dotClass = computed(() => {
 }
 
 .date-weekday {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: #2c2c2c;
+  color: var(--color-ink);
   line-height: 20px;
   white-space: nowrap;
+}
+
+@media (min-width: 600px) {
+  .date-weekday { font-size: 18px; }
+}
+
+@media (min-width: 768px) {
+  .date-weekday { font-size: 20px; }
 }
 
 .dot-col {
@@ -77,23 +88,31 @@ const dotClass = computed(() => {
   z-index: 2;
 }
 
-.solid-dot.dot-default { background: #3a3a3a; }
-.solid-dot.dot-yellow  { background: #f5a623; }
-.solid-dot.dot-green   { background: #4caf50; }
+.solid-dot.dot-default { background: var(--color-ink); }
+.solid-dot.dot-yellow  { background: #D4A574; }
+.solid-dot.dot-green   { background: #7BA88A; }
 
 .date-num-col {
   grid-column: 5;
   display: flex;
   align-items: flex-start;
   padding-top: 16px;
-  padding-bottom: 20px;
+  padding-bottom: 16px;
 }
 
 .date-num {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: #2c2c2c;
+  color: var(--color-ink);
   line-height: 20px;
   white-space: nowrap;
+}
+
+@media (min-width: 600px) {
+  .date-num { font-size: 18px; }
+}
+
+@media (min-width: 768px) {
+  .date-num { font-size: 20px; }
 }
 </style>

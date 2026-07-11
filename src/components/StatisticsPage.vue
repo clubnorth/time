@@ -15,14 +15,14 @@
       </div>
     </div>
 
-    <div class="period-bar">
-      <button v-for="p in periods" :key="p" class="period-btn" :class="{ active: period === p }" @click="period = p">{{ periodLabels[p] }}</button>
-    </div>
-
     <div class="year-nav">
-      <button class="year-arrow" @click="year--">&lt;</button>
+      <button class="year-arrow" @click="year--" aria-label="???">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
       <span class="year-text">{{ year }}</span>
-      <button class="year-arrow" @click="year++" :disabled="year >= maxYear">&gt;</button>
+      <button class="year-arrow" @click="year++" :disabled="year >= maxYear" aria-label="???">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
 
     <div class="heatmaps">
@@ -32,10 +32,10 @@
           <span class="heatmap-title">{{ cat.name }}</span>
           <span class="heatmap-count">{{ cat.count }}次</span>
         </div>
-        <div class="hm-scroll" ref="hmScroll">
+        <div class="hm-scroll" ref="hmScroll" @pointerdown="onHmPointerDown" @pointermove="onHmPointerMove" @pointerup="onHmPointerUp" @pointerleave="onHmPointerUp">
             <div class="hm-weeks" v-for="(week, wi) in cat.weeks" :key="wi">
               <template v-for="(day, di) in week" :key="di">
-              <div v-if="day"
+              <template v-if="day"><div
                 class="hm-cell"
                 :class="{ filled: day.filled, today: day.isToday }"
                 :style="day.filled ? { background: cat.color } : {}"
@@ -45,7 +45,10 @@
                 <span class="hm-month">{{ day.label }}</span>
               </div>
               </template>
-              <div v-for="n in (7 - week.filter(d => d).length)" :key="'e' + n" class="hm-cell hm-empty"></div>
+              <template v-else>
+              <div class="hm-cell hm-empty"></div>
+              </template>
+              </template>
             </div>
           </div></div>
     </div>
@@ -54,23 +57,22 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { API_BASE } from '../config.js'
 
 const emit = defineEmits(['back'])
-const period = ref('year')
 const year = ref(new Date().getFullYear())
 const maxYear = ref(new Date().getFullYear())
-const periods = ['week', 'month', 'year']
-const periodLabels = { week: '周', month: '月', year: '年' }
-const API_BASE = 'http://localhost:8080'
 const allEntries = ref([])
 
 const categories = [
-  { type: 'thought',  name: '念头',     color: '#9DB5C9' },
+  { type: 'thought',  name: '随记',     color: '#9DB5C9' },
   { type: 'asset',    name: '资产记录', color: '#D4B87A' },
   { type: 'uric',     name: '尿酸记录', color: '#BE999B' },
   { type: 'exercise', name: '运动',     color: '#84B8A4' },
   { type: 'discipline', name: '自律',   color: '#8CA4BD' },
-  { type: 'nosugar',  name: '禁止糖分', color: '#C88C8C' },
+  { type: 'nosugar',    name: '禁止糖分', color: '#C88C8C' },
+  { type: 'reading',   name: '读书',     color: '#A099C4' },
+  { type: 'movie',     name: '影视',     color: '#CB99B0' },
 ]
 
 const monthNames = ['一','二','三','四','五','六','七','八','九','十','十一','十二']
@@ -160,17 +162,20 @@ const topStats = computed(() => {
   const total = allEntries.value.length
   const now = new Date()
   const thisMonth = allEntries.value.filter(e => e.recorded_at.substring(0,7) === `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`).length
-  const today = allEntries.value.filter(e => e.recorded_at.substring(0,10) === `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`).length
-  let maxStreak = 0
-  for (const t of ['discipline','nosugar']) {
-    const es = allEntries.value.filter(e => e.type === t)
-    if (es.length) maxStreak = Math.max(maxStreak, parseInt(es[0].description)||0)
+  const daysWithRecords = new Set(allEntries.value.map(e => e.recorded_at.substring(0, 10))).size
+  let daysSinceStart = 0
+  if (allEntries.value.length > 0) {
+    const earliest = allEntries.value.reduce((min, e) => e.recorded_at < min ? e.recorded_at : min, allEntries.value[0].recorded_at)
+    const startDate = new Date(earliest.substring(0, 10))
+    const todayDate = new Date()
+    todayDate.setHours(0, 0, 0, 0)
+    daysSinceStart = Math.floor((todayDate - startDate) / 86400000) + 1
   }
   return [
     { label: '总记录', value: total },
     { label: '本月', value: thisMonth },
-    { label: '今日', value: today },
-    { label: '最长连续', value: maxStreak + '天' },
+    { label: '记录天数', value: daysWithRecords },
+    { label: '已使用', value: daysSinceStart + '天' },
   ]
 })
 
@@ -182,56 +187,89 @@ const categoryData = computed(() => {
 })
 
 
+// Heatmap drag-to-scroll (horizontal only, vertical passes through for page scroll)
+let hmDragState = { active: false, startX: 0, startY: 0, scrollLeft: 0, isHorizontal: false }
+function onHmPointerDown(e) {
+  hmDragState.active = true
+  hmDragState.startX = e.pageX
+  hmDragState.startY = e.pageY
+  hmDragState.scrollLeft = e.currentTarget.scrollLeft
+  hmDragState.isHorizontal = false
+}
+function onHmPointerMove(e) {
+  if (!hmDragState.active) return
+  const dx = Math.abs(e.pageX - hmDragState.startX)
+  const dy = Math.abs(e.pageY - hmDragState.startY)
+  if (!hmDragState.isHorizontal) {
+    if (dx < 5 && dy < 5) return     // dead zone
+    hmDragState.isHorizontal = dx > dy
+  }
+  if (!hmDragState.isHorizontal) return // vertical: let browser handle page scroll
+  e.preventDefault()
+  e.currentTarget.scrollLeft = hmDragState.scrollLeft - (e.pageX - hmDragState.startX) * 1.5
+}
+function onHmPointerUp() { hmDragState.active = false }
+
 async function fetchAll() {
   try {
-    const res = await fetch(`${API_BASE}/api/entries?limit=500`)
-    const json = await res.json()
-    if (json.code === 0) allEntries.value = json.data
+    let allData = []
+    let before = ''
+    while (true) {
+      const url = `${API_BASE}/api/entries?limit=100${before ? '&before=' + encodeURIComponent(before) : ''}`
+      const res = await fetch(url)
+      const json = await res.json()
+      if (json.code !== 0 || !Array.isArray(json.data) || json.data.length === 0) break
+      allData = allData.concat(json.data)
+      if (json.data.length < 100) break
+      before = json.data[json.data.length - 1].recorded_at
+    }
+    allEntries.value = allData
   } catch (e) { console.error(e) }
 }
 
-onMounted(async () => { await fetchAll(); nextTick(() => { const el = document.querySelector('.hm-scroll'); if (el) el.scrollLeft = el.scrollWidth }) })
+onMounted(async () => { await fetchAll(); nextTick(() => { document.querySelectorAll('.hm-scroll').forEach(el => { el.scrollLeft = el.scrollWidth }) }) })
 
 
-
-function scrollToEnd(el) { if (el) { el.scrollLeft = el.scrollWidth; } }
 </script>
 
 <style scoped>
-.stats-page { min-height: 100dvh; background: #fff; padding: 0 32px 60px; width: 100%; }
+.stats-page { min-height: 100dvh; background: var(--color-card); padding: 0 24px 60px; width: 100%; }
+@media (min-width: 600px) { .stats-page { padding: 0 28px 68px; } }
+@media (min-width: 768px) { .stats-page { padding: 0 36px 72px; } }
+
 .stats-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 10px; }
-.back-btn { width: 32px; height: 32px; border: none; background: none; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.header-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+.back-btn { width: 32px; height: 32px; border: none; background: none; color: var(--color-ink); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background .15s }
+.back-btn:hover { background: var(--color-surface-dim) }
+.header-title { font-size: 17px; font-weight: 600; color: var(--color-ink); }
 .header-spacer { width: 32px; }
 
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-.stat-card { background: #fafafa; border-radius: 14px; padding: 18px 14px; display: flex; flex-direction: column; gap: 3px; }
-.stat-value { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-.stat-label { font-size: 13px; color: #999; }
+@media (min-width: 768px) { .stat-grid { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; } }
+.stat-card { background: var(--color-surface-dim); border-radius: var(--radius-lg); padding: 18px 14px; display: flex; flex-direction: column; gap: 3px; }
+.stat-value { font-size: 34px; font-weight: 700; color: var(--color-ink); line-height: 1; }
+.stat-label { font-size: 13px; color: var(--color-graphite); }
 
-.period-bar { display: flex; margin: 8px 0 12px; background: #f5f5f5; border-radius: 8px; padding: 2px; }
-.period-btn { flex: 1; padding: 6px 0; text-align: center; font-size: 13px; color: #999; background: none; border: none; border-radius: 6px; cursor: pointer; }
-.period-btn.active { background: #fff; color: #1a1a1a; box-shadow: 0 0 0 1px #e0e0e0; }
-
-.year-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
-.year-arrow { width: 28px; height: 28px; border: 1px solid #e0e0e0; border-radius: 50%; background: #fff; color: #666; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.year-text { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-
+.year-nav { display: flex; align-items: center; justify-content: center; gap: 2px; margin-bottom: 16px; background: var(--color-surface-dim); border-radius: var(--radius-md); padding: 4px; width: fit-content; margin-left: auto; margin-right: auto; }
+.year-arrow { width: 36px; height: 36px; border: none; border-radius: 10px; background: transparent; color: var(--color-graphite); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+.year-arrow:hover { background: var(--color-pencil); color: var(--color-ink); }
+.year-arrow:active { background: var(--color-pencil); }
+.year-arrow:disabled { color: var(--color-pencil); cursor: default; pointer-events: none; }
+.year-arrow:disabled:hover { background: transparent; }
+.year-text { font-size: 15px; font-weight: 600; color: var(--color-ink); padding: 0 14px; min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: #fafafa; border-radius: 14px; padding: 12px 8px; overflow: hidden; }
-.heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.heatmap-card { background: var(--color-surface-dim); border-radius: var(--radius-lg); padding: 14px 10px; overflow: hidden; }
+.heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 0 2px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.heatmap-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
-.heatmap-count { margin-left: auto; font-size: 12px; color: #999; }
+.heatmap-title { font-size: 14px; font-weight: 600; color: var(--color-ink); }
+.heatmap-count { margin-left: auto; font-size: 12px; color: var(--color-graphite); }
 
-.hm-scroll { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; }
+.hm-scroll { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; touch-action: pan-y; user-select: none; }
 .hm-scroll::-webkit-scrollbar { display: none; }
 .hm-weeks { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
-.hm-cell { width: 20px; height: 20px; border-radius: 3px; background: #f0f0f0; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.hm-cell.filled {  }
-.hm-cell.today { box-shadow: inset 0 0 0 2px #333; }
+.hm-cell { width: 22px; height: 22px; border-radius: 3px; background: #EDE8E2; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
 .hm-cell.hm-empty { background: transparent; }
-.hm-date { font-size: 8px; color: #999; line-height: 1; }
-.hm-month { position: absolute; top: 1px; left: 1px; font-size: 6px; color: #888; line-height: 1; pointer-events: none; }
+.hm-date { font-size: 9px; color: var(--color-graphite); line-height: 1; font-weight: 600; text-align: center; }
+.hm-month { font-size: 9px; color: var(--color-graphite); line-height: 1; font-weight: 600; text-align: center; }
 </style>

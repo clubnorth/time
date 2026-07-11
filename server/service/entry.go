@@ -1,7 +1,8 @@
-package service
+﻿package service
 
 import (
   "database/sql"
+  "strconv"
   "time"
 )
 
@@ -90,5 +91,69 @@ func (s *EntryService) CreateEntry(e *Entry) error {
   e.ID = int(id)
   e.CreatedAt = now
   e.UpdatedAt = now
+  return nil
+}
+
+func (s *EntryService) GetSetting(key string) (string, error) {
+  var value string
+  err := s.db.QueryRow("SELECT value FROM settings WHERE key = ?", key).Scan(&value)
+  if err == sql.ErrNoRows {
+    return "", nil
+  }
+  return value, err
+}
+
+func (s *EntryService) SetSetting(key, value string) error {
+  _, err := s.db.Exec("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", key, value)
+  return err
+}
+
+func (s *EntryService) DeleteEntry(id int) error {
+  _, err := s.db.Exec("DELETE FROM entries WHERE id = ?", id)
+  return err
+}
+
+func (s *EntryService) RecalculateEntries(entryType string) error {
+  rows, err := s.db.Query(
+    "SELECT id, recorded_at FROM entries WHERE type = ? ORDER BY recorded_at ASC",
+    entryType,
+  )
+  if err != nil {
+    return err
+  }
+  defer rows.Close()
+
+  type row struct {
+    id         int
+    recordedAt string
+  }
+  var entries []row
+  for rows.Next() {
+    var r row
+    if err := rows.Scan(&r.id, &r.recordedAt); err != nil {
+      return err
+    }
+    entries = append(entries, r)
+  }
+  if len(entries) == 0 {
+    return nil
+  }
+
+  for i := len(entries) - 1; i >= 0; i-- {
+    count := 1
+    for j := i - 1; j >= 0; j-- {
+      d1, _ := time.Parse("2006-01-02 15:04:05", entries[j+1].recordedAt)
+      d2, _ := time.Parse("2006-01-02 15:04:05", entries[j].recordedAt)
+      if d1.Sub(d2).Hours() == 24 {
+        count++
+      } else {
+        break
+      }
+    }
+    _, err := s.db.Exec("UPDATE entries SET description = ? WHERE id = ?", strconv.Itoa(count), entries[i].id)
+    if err != nil {
+      return err
+    }
+  }
   return nil
 }

@@ -20,20 +20,20 @@ defineEmits(['add'])
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #2c2c2c;
-  color: #ffffff;
-  border: 3px solid #f8f8f8;
+  background: var(--color-ink);
+  color: var(--color-card);
+  border: 3px solid #fcfcfc;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   transition: transform 0.15s, box-shadow 0.15s;
   z-index: 1;
 }
 .add-btn:hover {
   transform: translateX(-50%) scale(1.05);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
 }
 .add-btn:active {
   transform: translateX(-50%) scale(0.96);

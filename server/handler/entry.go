@@ -35,7 +35,7 @@ func respondError(w http.ResponseWriter, code int, msg string) {
   w.Header().Set("Content-Type", "application/json; charset=utf-8")
   w.WriteHeader(code)
   json.NewEncoder(w).Encode(apiResponse{
-    Code:    code,
+    Code:    1,
     Message: msg,
     Data:    nil,
   })
@@ -96,4 +96,85 @@ func (h *EntryHandler) CreateEntry(w http.ResponseWriter, r *http.Request) {
     return
   }
   respond(w, 201, entry)
+}
+
+func (h *EntryHandler) DeleteEntry(w http.ResponseWriter, r *http.Request) {
+  id, err := strconv.Atoi(r.PathValue("id"))
+  if err != nil {
+    respondError(w, 400, "invalid id")
+    return
+  }
+  if err := h.svc.DeleteEntry(id); err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, map[string]string{"status": "ok"})
+}
+func (h *EntryHandler) GetSetting(w http.ResponseWriter, r *http.Request) {
+  key := r.PathValue("key")
+  if key == "" {
+    respondError(w, 400, "key required")
+    return
+  }
+  value, err := h.svc.GetSetting(key)
+  if err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, map[string]string{"key": key, "value": value})
+}
+
+func (h *EntryHandler) SetSetting(w http.ResponseWriter, r *http.Request) {
+  key := r.PathValue("key")
+  if key == "" {
+    respondError(w, 400, "key required")
+    return
+  }
+  var body struct {
+    Value string `json:"value"`
+  }
+  if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+    respondError(w, 400, "invalid body")
+    return
+  }
+  if err := h.svc.SetSetting(key, body.Value); err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, map[string]string{"status": "ok"})
+}
+
+func (h *EntryHandler) RecalculateEntries(w http.ResponseWriter, r *http.Request) {
+  entryType := r.URL.Query().Get("type")
+  if entryType == "" {
+    respondError(w, 400, "type required")
+    return
+  }
+  if err := h.svc.RecalculateEntries(entryType); err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, map[string]string{"status": "ok"})
+}
+
+func (h *EntryHandler) ExportData(w http.ResponseWriter, r *http.Request) {
+  data, err := h.svc.ExportAll()
+  if err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, data)
+}
+
+func (h *EntryHandler) ImportData(w http.ResponseWriter, r *http.Request) {
+  var data service.ExportData
+  if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+    respondError(w, 400, "invalid request body")
+    return
+  }
+  if err := h.svc.ImportAll(&data); err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, map[string]string{"status": "ok"})
 }

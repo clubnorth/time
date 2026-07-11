@@ -59,10 +59,20 @@ function toggle() {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 480px;
-  background: #ffffff;
+  max-width: var(--content-width);
+  background: var(--color-card);
   padding: 16px 24px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-light);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@media (min-width: 600px) {
+  .year-month-header { padding: 18px 28px 14px; }
+}
+
+@media (min-width: 768px) {
+  .year-month-header { padding: 20px 36px 14px; }
 }
 
 .header-btn {
@@ -78,12 +88,16 @@ function toggle() {
 .ym-text {
   font-size: 22px;
   font-weight: 700;
-  color: #2c2c2c;
-  letter-spacing: 0.5px;
+  color: var(--color-ink);
+  letter-spacing: 0.3px;
+}
+
+@media (min-width: 600px) {
+  .ym-text { font-size: 24px; }
 }
 
 .ym-chevron {
-  color: #999;
+  color: var(--color-graphite);
   margin-top: 2px;
   transition: transform 0.2s ease;
 }
@@ -96,7 +110,7 @@ function toggle() {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .dropdown-panel {
@@ -104,11 +118,11 @@ function toggle() {
   top: 56px;
   left: 24px;
   right: 24px;
-  max-width: 432px;
+  max-width: calc(var(--content-width) - 48px);
   margin: 0 auto;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   padding: 4px 0;
 }
@@ -121,19 +135,18 @@ function toggle() {
   border: none;
   text-align: left;
   font-size: 15px;
-  color: #2c2c2c;
+  color: var(--color-ink);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.12s;
 }
 
 .dropdown-item:hover {
-  background: #f5f5f5;
+  background: var(--color-surface-dim);
 }
 
 .dropdown-item.active {
   font-weight: 600;
-  color: #1a1a1a;
-  background: #f8f8f8;
+  background: var(--color-surface-dim);
 }
 
 .fade-enter-active,
