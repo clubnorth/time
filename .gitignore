@@ -5,5 +5,7 @@ vite_err.log
 *.cjs
 *.py
 server/time-server.exe
+server/time-server.exe~
 server/data/
 server/go.sum
+server/config.json
