@@ -62,6 +62,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { API_BASE } from '../config.js'
 import TimePickerModal from './TimePickerModal.vue'
 import { useTimePicker } from '../composables/useTimePicker.js'
 
@@ -84,7 +85,7 @@ async function handleCreate() {
   loading.value = true
   let mediaInfo = null
   try {
-    const r = await fetch('/api/media-info', {
+    const r = await fetch(`${API_BASE}/api/media-info`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name.value.trim(), type: mediaType.value }),

@@ -110,6 +110,24 @@ func (h *EntryHandler) DeleteEntry(w http.ResponseWriter, r *http.Request) {
   }
   respond(w, 200, map[string]string{"status": "ok"})
 }
+
+func (h *EntryHandler) UpdateEntry(w http.ResponseWriter, r *http.Request) {
+  id, err := strconv.Atoi(r.PathValue("id"))
+  if err != nil {
+    respondError(w, 400, "invalid id")
+    return
+  }
+  var entry service.Entry
+  if err := json.NewDecoder(r.Body).Decode(&entry); err != nil {
+    respondError(w, 400, "invalid request body")
+    return
+  }
+  if err := h.svc.UpdateEntry(id, &entry); err != nil {
+    respondError(w, 500, err.Error())
+    return
+  }
+  respond(w, 200, map[string]string{"status": "ok"})
+}
 func (h *EntryHandler) GetSetting(w http.ResponseWriter, r *http.Request) {
   key := r.PathValue("key")
   if key == "" {

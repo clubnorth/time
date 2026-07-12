@@ -15,7 +15,8 @@
       v-for="entry in group.entries"
       :key="entry.id"
       :entry="entry"
-      @delete-entry="(id) => $emit('delete-entry', id)"
+      @delete-entry="(data) => $emit('delete-entry', data)"
+      @edit-entry="(data) => $emit('edit-entry', data)"
     />
   </div>
 </template>
@@ -24,7 +25,7 @@
 import { computed } from 'vue'
 import TimelineEntryCard from './TimelineEntryCard.vue'
 
-defineEmits(['delete-entry'])
+defineEmits(['delete-entry', 'edit-entry'])
 
 const props = defineProps({
   group: Object

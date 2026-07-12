@@ -32,7 +32,7 @@
           <span class="heatmap-title">{{ cat.name }}</span>
           <span class="heatmap-count">{{ cat.count }}次</span>
         </div>
-        <div class="hm-scroll" ref="hmScroll" @pointerdown="onHmPointerDown" @pointermove="onHmPointerMove" @pointerup="onHmPointerUp" @pointerleave="onHmPointerUp">
+        <div class="hm-scroll">
             <div class="hm-weeks" v-for="(week, wi) in cat.weeks" :key="wi">
               <template v-for="(day, di) in week" :key="di">
               <template v-if="day"><div
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { API_BASE } from '../config.js'
 
 const emit = defineEmits(['back'])
@@ -187,29 +187,6 @@ const categoryData = computed(() => {
 })
 
 
-// Heatmap drag-to-scroll (horizontal only, vertical passes through for page scroll)
-let hmDragState = { active: false, startX: 0, startY: 0, scrollLeft: 0, isHorizontal: false }
-function onHmPointerDown(e) {
-  hmDragState.active = true
-  hmDragState.startX = e.pageX
-  hmDragState.startY = e.pageY
-  hmDragState.scrollLeft = e.currentTarget.scrollLeft
-  hmDragState.isHorizontal = false
-}
-function onHmPointerMove(e) {
-  if (!hmDragState.active) return
-  const dx = Math.abs(e.pageX - hmDragState.startX)
-  const dy = Math.abs(e.pageY - hmDragState.startY)
-  if (!hmDragState.isHorizontal) {
-    if (dx < 5 && dy < 5) return     // dead zone
-    hmDragState.isHorizontal = dx > dy
-  }
-  if (!hmDragState.isHorizontal) return // vertical: let browser handle page scroll
-  e.preventDefault()
-  e.currentTarget.scrollLeft = hmDragState.scrollLeft - (e.pageX - hmDragState.startX) * 1.5
-}
-function onHmPointerUp() { hmDragState.active = false }
-
 async function fetchAll() {
   try {
     let allData = []
@@ -227,7 +204,13 @@ async function fetchAll() {
   } catch (e) { console.error(e) }
 }
 
-onMounted(async () => { await fetchAll(); nextTick(() => { document.querySelectorAll('.hm-scroll').forEach(el => { el.scrollLeft = el.scrollWidth }) }) })
+onMounted(async () => { await fetchAll(); nextTick(() => scrollHmRight()) })
+
+watch(year, () => { nextTick(() => scrollHmRight()) })
+
+function scrollHmRight() {
+  document.querySelectorAll('.hm-scroll').forEach(el => { el.scrollLeft = el.scrollWidth })
+}
 
 
 </script>
@@ -264,7 +247,7 @@ onMounted(async () => { await fetchAll(); nextTick(() => { document.querySelecto
 .heatmap-title { font-size: 14px; font-weight: 600; color: var(--color-ink); }
 .heatmap-count { margin-left: auto; font-size: 12px; color: var(--color-graphite); }
 
-.hm-scroll { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; touch-action: pan-y; user-select: none; }
+.hm-scroll { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-behavior: smooth }
 .hm-scroll::-webkit-scrollbar { display: none; }
 .hm-weeks { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
 .hm-cell { width: 22px; height: 22px; border-radius: 3px; background: #EDE8E2; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }

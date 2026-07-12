@@ -11,7 +11,6 @@
         class="card-wrapper"
         @pointerdown.prevent="onDown"
         @pointerup="onUp"
-        @pointerleave="onUp"
         @pointercancel="onUp"
       >
         <div class="content-card" :class="'cat-' + (entry.category || 'yellow')">
@@ -37,6 +36,7 @@
           <div v-if="showPopover" class="delete-popover">
             <div class="popover-arrow"></div>
             <div class="popover-body">
+              <button v-if="!(entry.isDiscipline || entry.isNosugar)" class="popover-edit-btn" @click.stop="confirmEdit">修改</button>
               <button class="popover-delete-btn" @click.stop="confirmDelete">删除</button>
               <button class="popover-cancel-btn" @click.stop="showPopover = false">取消</button>
             </div>
@@ -48,10 +48,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 
 const props = defineProps({ entry: Object })
-const emit = defineEmits(['delete-entry'])
+const emit = defineEmits(['delete-entry', 'edit-entry'])
 
 const showPopover = ref(false)
 let longPressTimer = null
@@ -64,8 +64,14 @@ function onUp() {
 }
 function confirmDelete() {
   showPopover.value = false
-  emit('delete-entry', props.entry.id)
+  emit('delete-entry', { id: props.entry.id, isCheckIn: props.entry.isDiscipline || props.entry.isNosugar, checkType: props.entry.isDiscipline ? 'discipline' : props.entry.isNosugar ? 'nosugar' : '' })
 }
+function confirmEdit() {
+  showPopover.value = false
+  emit('edit-entry', { id: props.entry.id, title: props.entry.title, description: props.entry.description, category: props.entry.category, time: props.entry.time, valence: props.entry.valence })
+}
+
+onUnmounted(() => { if (longPressTimer) clearTimeout(longPressTimer) })
 </script>
 
 <style scoped>
@@ -162,8 +168,15 @@ function confirmDelete() {
   padding:10px 20px;border:none;background:none;
   font-size:14px;font-weight:500;color:#D4787A;cursor:pointer;
   transition:background .12s;
+  border-left:1px solid var(--color-border-light);
 }
 .popover-delete-btn:hover { background:#FDF0F0 }
+.popover-edit-btn {
+  padding:10px 20px;border:none;background:none;
+  font-size:14px;font-weight:500;color:#7B9FC6;cursor:pointer;
+  transition:background .12s;
+}
+.popover-edit-btn:hover { background:#EFF6FF }
 .popover-cancel-btn {
   padding:10px 20px;border:none;background:none;
   font-size:14px;color:var(--color-graphite);cursor:pointer;

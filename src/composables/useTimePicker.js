@@ -31,6 +31,9 @@ export function useTimePicker() {
   }
 
   function closeTimePicker() {
+    // 无论何种方式关闭，都将选择器状态同步到 currentTime
+    const d = new Date(pickYear.value, pickMonth.value - 1, pickDay.value, pickHour.value, pickMinute.value, 0)
+    currentTime.value = d
     showTimeModal.value = false
   }
 

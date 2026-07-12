@@ -32,32 +32,30 @@ func MediaInfo(apiKey string) http.HandlerFunc {
       return
     }
 
-    var fields string
+    var jsonTemplate string
     if req.MediaType == "movie" {
-      fields = `"director":"导演（最多两人，用/分隔）","cast":"主演（最多三人，用/分隔）","country":"国家","first_release_date":"首次上映年份(YYYY)","duration":"时长（分钟）","tags":["标签1","标签2","标签3"]`
+      jsonTemplate = `{"director":"导演","cast":"主演","country":"国家","first_release_date":"年份","duration":"分钟","tags":["标签1","标签2","标签3"]}`
     } else {
-      fields = `"director":"导演（最多两人，用/分隔）","cast":"主演（最多三人，用/分隔）","country":"国家","first_release_date":"首次上映年份(YYYY)","episodes":"集数（如：45min/12集 或 24min/24集）","tags":["标签1","标签2","标签3"]`
+      jsonTemplate = `{"director":"导演","cast":"主演","country":"国家","first_release_date":"年份","episodes":"集数","tags":["标签1","标签2","标签3"]}`
     }
 
     typeLabel := map[string]string{"movie": "电影", "series": "剧集", "anime": "动漫"}[req.MediaType]
     if typeLabel == "" { typeLabel = "影视" }
 
-    prompt := strings.Join([]string{
-      `你是影视数据库管理员。请查询` + typeLabel + `《` + req.Name + `》的真实信息，以纯JSON格式返回（不要markdown标记）：`,
-      `{` + fields + `}`,
-      `tags是3个简短中文标签概括类型或主题。必须填写真实数据，找不到信息就查相关资料合理推测。`,
-    }, "\n")
-
     body := map[string]interface{}{
       "model": "deepseek-chat",
       "messages": []map[string]string{
-        {"role": "system", "content": `你是专业的影视数据库管理员。对于任何影视作品，你必须返回具体的JSON数据，包括导演、主演、国家、上映年份、时长/集数和标签。如果数据不完全确定，请根据你的知识合理推测。`},
-        {"role": "user", "content": prompt},
+        {"role": "system", "content": `你是影视信息助手。你的训练数据包含大量豆瓣、IMDb、TMDB、维基百科的电影电视剧动漫信息。请尽力回忆并返回准确信息。如果记不清，根据类似作品合理推测，但绝不用"未知"作为答案——可以用"可能xxx"。标签要有3个概括类型的简短中文。`},
+        {"role": "user", "content": typeLabel + "《" + req.Name + "》的导演、主演、国家、年份、时长等，严格按此JSON格式返回（不要markdown）：\n" + jsonTemplate},
       },
-      "max_tokens": 300,
-      "temperature": 0.3,
+      "max_tokens":  350,
+      "temperature": 0.6,
     }
-    jsonBody, _ := json.Marshal(body)
+    jsonBody, err := json.Marshal(body)
+    if err != nil {
+      respondError(w, 500, "internal error")
+      return
+    }
 
     client := &http.Client{Timeout: 15 * time.Second}
     httpReq, _ := http.NewRequest("POST", "https://api.deepseek.com/v1/chat/completions", bytes.NewReader(jsonBody))

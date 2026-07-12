@@ -75,6 +75,7 @@ func main() {
   })
   mux.HandleFunc("POST /api/entries", entryH.CreateEntry)
   mux.HandleFunc("DELETE /api/entries/{id}", entryH.DeleteEntry)
+  mux.HandleFunc("PUT /api/entries/{id}", entryH.UpdateEntry)
   mux.HandleFunc("POST /api/entries/recalculate", entryH.RecalculateEntries)
   mux.HandleFunc("GET /api/data/export", entryH.ExportData)
   mux.HandleFunc("POST /api/data/import", entryH.ImportData)

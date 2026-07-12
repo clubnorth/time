@@ -64,6 +64,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { API_BASE } from '../config.js'
 import TimePickerModal from './TimePickerModal.vue'
 import { useTimePicker } from '../composables/useTimePicker.js'
 
@@ -98,7 +99,7 @@ async function handleCreate() {
   if (status.value === 'finished') {
     loading.value = true
     try {
-      const r = await fetch('/api/book-info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ book_name: name.value.trim() }) })
+      const r = await fetch(`${API_BASE}/api/book-info`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ book_name: name.value.trim() }) })
       const j = await r.json()
       if (j.code === 0 && j.data) bookInfo = j.data
     } catch (e) { console.error('Book info fetch failed:', e) }

@@ -25,7 +25,7 @@
             </div>
           </div>
         </div>
-        <TimePickerModal
+        <TodoTimePicker
           :visible="tp.showTimeModal.value"
           :pickYear="tp.pickYear.value" :pickMonth="tp.pickMonth.value" :pickDay="tp.pickDay.value"
           :pickHour="tp.pickHour.value" :pickMinute="tp.pickMinute.value"
@@ -35,7 +35,7 @@
           @adjustMonth="tp.adjustMonth"
           @adjustDay="tp.adjustDay"
           @adjustHour="tp.adjustHour"
-          @adjustMinute="adjMinute"
+          @adjustMinute="tp.adjustMinute"
         />
       </div>
     </Transition>
@@ -44,7 +44,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import TimePickerModal from './TimePickerModal.vue'
+import TodoTimePicker from './TodoTimePicker.vue'
 import { useTimePicker } from '../composables/useTimePicker.js'
 
 const props = defineProps({ visible: { type: Boolean, default: false } })
@@ -52,21 +52,27 @@ const emit = defineEmits(['cancel', 'create'])
 
 const tp = useTimePicker()
 
-function adjMinute() {
-  if (tp.pickMinute.value < 30) tp.pickMinute.value = 30
-  else tp.pickMinute.value = 0
-}
-
 const note = ref('')
 
 watch(() => props.visible, (val) => {
-  if (val) { note.value = ''; tp.currentTime.value = new Date() }
+  if (val) {
+    note.value = ''
+    const now = new Date()
+    tp.currentTime.value = now
+    tp.pickYear.value = now.getFullYear()
+    tp.pickMonth.value = now.getMonth() + 1
+    tp.pickDay.value = now.getDate()
+    tp.pickHour.value = now.getHours()
+    tp.pickMinute.value = now.getMinutes()
+  }
 })
 
 function handleCreate() {
   if (!note.value.trim() || note.value.length > 50) return
+  // 直接用 picker 状态构造 Date，避免 confirm 未执行时 currentTime 过期
+  const d = new Date(tp.pickYear.value, tp.pickMonth.value - 1, tp.pickDay.value, tp.pickHour.value, Math.round(tp.pickMinute.value / 10) * 10, 0)
   emit('create', {
-    time: tp.currentTime.value,
+    time: d,
     note: note.value.trim(),
   })
 }

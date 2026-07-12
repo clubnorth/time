@@ -113,6 +113,15 @@ func (s *EntryService) DeleteEntry(id int) error {
   return err
 }
 
+func (s *EntryService) UpdateEntry(id int, e *Entry) error {
+  now := time.Now().Format("2006-01-02 15:04:05")
+  _, err := s.db.Exec(
+    "UPDATE entries SET title=?, description=?, category=?, valence=?, recorded_at=?, updated_at=? WHERE id=?",
+    e.Title, e.Description, e.Category, e.Valence, e.RecordedAt, now, id,
+  )
+  return err
+}
+
 func (s *EntryService) RecalculateEntries(entryType string) error {
   rows, err := s.db.Query(
     "SELECT id, recorded_at FROM entries WHERE type = ? ORDER BY recorded_at ASC",
@@ -142,9 +151,9 @@ func (s *EntryService) RecalculateEntries(entryType string) error {
   for i := len(entries) - 1; i >= 0; i-- {
     count := 1
     for j := i - 1; j >= 0; j-- {
-      d1, _ := time.Parse("2006-01-02 15:04:05", entries[j+1].recordedAt)
-      d2, _ := time.Parse("2006-01-02 15:04:05", entries[j].recordedAt)
-      if d1.Sub(d2).Hours() == 24 {
+      d1, _ := time.Parse("2006-01-02", entries[j+1].recordedAt[:10])
+      d2, _ := time.Parse("2006-01-02", entries[j].recordedAt[:10])
+      if d1.Sub(d2).Hours() >= 23 && d1.Sub(d2).Hours() <= 25 {
         count++
       } else {
         break

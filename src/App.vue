@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <YearMonthHeader v-if="!showStats && !showTodo" v-model="currentMonth" :months="availableMonths" />
+    <YearMonthHeader v-if="!showStats && !showTodo" v-model="currentMonth" v-model:activeFilters="activeFilters" :months="availableMonths" />
 
     <div class="timeline-container" v-if="!showStats && !showTodo">
       <div class="timeline-line"></div>
@@ -10,6 +10,7 @@
         :key="group.date"
         :group="group"
         @delete-entry="handleDeleteEntry"
+        @edit-entry="handleEditEntry"
       />
     </div>
 
@@ -34,6 +35,7 @@
     <TodoFormPanel :visible="showTodoForm" @cancel="showTodoForm = false" @create="handleTodoCreate" />
     <ReadingFormPanel :visible="showReadingForm" @cancel="showReadingForm = false" @create="handleReadingCreate" />
     <MovieFormPanel :visible="showMovieForm" @cancel="showMovieForm = false" @create="handleMovieCreate" />
+    <EditEntryForm :visible="showEditForm" :data="editData" @cancel="showEditForm = false" @save="handleUpdateEntry" />
     <ConfirmModal :visible="showConfirm" :message="confirmMessage" @close="handleConfirmClose" />
     <TimePickerModal
       :visible="bfShowPicker"
@@ -63,6 +65,7 @@ import ExerciseFormPanel from './components/ExerciseFormPanel.vue'
 import TodoFormPanel from './components/TodoFormPanel.vue'
 import ReadingFormPanel from './components/ReadingFormPanel.vue'
 import MovieFormPanel from './components/MovieFormPanel.vue'
+import EditEntryForm from './components/EditEntryForm.vue'
 import StatisticsPage from './components/StatisticsPage.vue'
 import TodoPage from './components/TodoPage.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
@@ -93,12 +96,16 @@ const showExerciseForm = ref(false)
 const showTodoForm = ref(false)
 const showReadingForm = ref(false)
 const showMovieForm = ref(false)
+const showEditForm = ref(false)
+const editData = ref(null)
 const showStats = ref(false)
 const showTodo = ref(false)
 const todoKey = ref(0)
+const activeFilters = ref([])
 const showConfirm = ref(false)
 const confirmMessage = ref('')
 const pendingDeleteId = ref(null)
+const pendingDeleteType = ref('')
 const backfillType = ref('')
 const {
   currentTime: bfCurrentTime,
@@ -203,8 +210,13 @@ async function loadMore() {
 const allGroups = computed(() => {
   if (timelineData.value.length === 0) return []
   
+  // Apply type filter
+  const entries = activeFilters.value.length > 0
+    ? timelineData.value.filter(e => activeFilters.value.includes(e.type))
+    : timelineData.value
+  
   const byDate = {}
-  for (const entry of timelineData.value) {
+  for (const entry of entries) {
     const d = entry.recorded_at.substring(0, 10)
     if (!byDate[d]) byDate[d] = []
     byDate[d].push(entry)
@@ -260,11 +272,13 @@ const allGroups = computed(() => {
           isThought,
           isReading,
           isMovie,
+          isDiscipline,
+          isNosugar,
           valence: e.valence,
         }
       })
     
-    const d = new Date(date)
+    const d = new Date(date + 'T00:00:00')
     groups.push({
       date,
       weekday: weekdays[d.getDay()],
@@ -394,39 +408,52 @@ async function handleAssetCreate(data) {
 
 
 
-async function getConsecutiveDay(type) {
-  try {
-    const res = await fetch(`${API_BASE}/api/entries?limit=30`)
-    const json = await res.json()
-    if (json.code !== 0 || !Array.isArray(json.data)) return 1
-    const filtered = json.data.filter(e => e.type === type)
-    if (filtered.length === 0) return 1
-    const latest = filtered[0]
-    const latestDate = new Date(latest.recorded_at.substring(0, 10))
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-    const lds = latestDate.toDateString()
-    if (lds === today.toDateString()) return -1
-    if (lds === yesterday.toDateString()) return (parseInt(latest.description) || 0) + 1
-    return 1
-  } catch (e) { return 1 }
-}
-
-function handleDeleteEntry(id) {
-  pendingDeleteId.value = id
+function handleDeleteEntry(data) {
+  pendingDeleteId.value = data.id
+  pendingDeleteType.value = data.isCheckIn ? data.checkType : ''
   confirmMessage.value = '确定删除这条记录？'
   showConfirm.value = true
+}
+
+function handleEditEntry(data) {
+  const full = timelineData.value.find(e => e.id === data.id)
+  editData.value = {
+    id: data.id,
+    type: full ? full.type : '',
+    title: data.title || '',
+    description: full ? full.description : data.description || '',
+    category: full ? full.category : (data.category || 'green'),
+    valence: full ? full.valence : (data.valence || ''),
+    recordedAt: full ? full.recorded_at : '',
+  }
+  showEditForm.value = true
+}
+
+async function handleUpdateEntry(data) {
+  try {
+    const res = await fetch(`${API_BASE}/api/entries/${data.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: data.title, description: data.description, category: data.category, valence: data.valence, recorded_at: data.recorded_at }),
+    })
+    if ((await res.json()).code === 0) { await loadInitial() }
+  } catch (e) { console.error('Failed to update entry:', e) }
+  showEditForm.value = false
 }
 
 async function handleConfirmClose() {
   showConfirm.value = false
   const id = pendingDeleteId.value
+  const recalcType = pendingDeleteType.value
   pendingDeleteId.value = null
+  pendingDeleteType.value = ''
   if (id) {
     try {
       const res = await fetch(`${API_BASE}/api/entries/${id}`, { method: 'DELETE' })
       if ((await res.json()).code === 0) {
+        if (recalcType) {
+          try { await fetch(`${API_BASE}/api/entries/recalculate?type=` + recalcType, { method: 'POST' }) } catch (e) { console.error('Recalculate failed:', e) }
+        }
         await loadInitial()
       }
     } catch (e) { console.error('Failed to delete entry:', e) }
@@ -446,27 +473,31 @@ function bfCloseAndHide() {
 async function handleBackfillConfirm() {
   bfConfirmTime()
   const d = bfCurrentTime.value
+  const now = new Date()
+  if (d > new Date()) {
+    confirmMessage.value = '不能选择未来的时间打卡'
+    showConfirm.value = true
+    showAddPanel.value = false
+    return
+  }
   const { recordedAt, monthKey } = formatRecordTime(d)
   const type = backfillType.value
   const dateStr = recordedAt.substring(0, 10)
 
-  // Check for duplicate entry (same type, same date)
+  // 规则②：补卡，校验所选日期是否已存在打卡记录
   let duplicate = false
   try {
-    const res = await fetch(`${API_BASE}/api/entries?limit=200`)
-    const json = await res.json()
-    if (json.code === 0) {
-      duplicate = json.data.some(e => e.type === type && e.recorded_at.substring(0, 10) === dateStr)
-    }
+    const all = await fetchAllEntries()
+    duplicate = all.some(e => e.type === type && e.recorded_at.substring(0, 10) === dateStr)
   } catch (e) {
-    console.error('Failed to check duplicate entry:', e)
     confirmMessage.value = '网络异常，请重试'
     showConfirm.value = true
     return
   }
   if (duplicate) {
-    confirmMessage.value = '该天已经打过卡了'
+    confirmMessage.value = '该天已经打过卡了，不能重复补卡'
     showConfirm.value = true
+    showAddPanel.value = false
     return
   }
 
@@ -477,7 +508,7 @@ async function handleBackfillConfirm() {
       body: JSON.stringify({ type, title, description: '1', category: 'green', recorded_at: recordedAt }),
     })
     if ((await res.json()).code === 0) {
-      try { await fetch('/api/entries/recalculate?type='+type, { method: 'POST' }) } catch (e) { console.error('Recalculate failed:', e) }
+      try { await fetch(`${API_BASE}/api/entries/recalculate?type=`+type, { method: 'POST' }) } catch (e) { console.error('Recalculate failed:', e) }
       await loadInitial()
       skipScrollWatch.value = true
       currentMonth.value = monthKey
@@ -489,26 +520,51 @@ async function handleBackfillConfirm() {
 }
 
 async function handleQuickCreate(type) {
-  const dayCount = await getConsecutiveDay(type)
-  if (dayCount < 0) { confirmMessage.value = '今天已经打过卡了，明天再来吧'; showConfirm.value = true; showAddPanel.value = false; return }
-  const { recordedAt, monthKey } = formatRecordTime(new Date())
+  // 规则①：普通打卡，仅校验今日 0-24 点，已有记录弹窗禁止重复
+  const today = new Date()
+  const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0')
 
+  let allEntries = []
+  try { allEntries = await fetchAllEntries() } catch (e) { return }
+
+  const sameType = allEntries.filter(e => e.type === type)
+  const todayEntry = sameType.find(e => e.recorded_at.substring(0, 10) === todayStr)
+  if (todayEntry) {
+    confirmMessage.value = '今天已经打过卡了，明天再来吧'
+    showConfirm.value = true
+    showAddPanel.value = false
+    return
+  }
+
+  // 计算连续天数
+  const latest = sameType.reduce((a, b) => a.recorded_at > b.recorded_at ? a : b, null)
+  let dayCount = 1
+  if (latest) {
+    const yst = new Date(today); yst.setDate(yst.getDate() - 1)
+    const ystStr = yst.getFullYear() + '-' + String(yst.getMonth()+1).padStart(2,'0') + '-' + String(yst.getDate()).padStart(2,'0')
+    if (latest.recorded_at.substring(0, 10) === ystStr) {
+      dayCount = (parseInt(latest.description) || 0) + 1
+    }
+  }
+
+  const { recordedAt, monthKey } = formatRecordTime(today)
   const title = type === 'discipline' ? '自律' : '禁止糖分'
-
   try {
     const res = await fetch(`${API_BASE}/api/entries`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, title, description: String(dayCount), category: 'green', recorded_at: recordedAt }),
     })
     if ((await res.json()).code === 0) {
-      await loadInitial()
-      skipScrollWatch.value = true
-      currentMonth.value = monthKey
-      showStats.value = false
+      await loadInitial(); skipScrollWatch.value = true; currentMonth.value = monthKey; showStats.value = false
+    } else {
+      confirmMessage.value = '打卡失败，请重试'
+      showConfirm.value = true
     }
-  } catch (e) { console.error('Quick create failed:', e) }
-
+  } catch (e) {
+    console.error('Quick create failed:', e)
+    confirmMessage.value = '打卡失败，请重试'
+    showConfirm.value = true
+  }
   showAddPanel.value = false
 }
 

@@ -35,7 +35,7 @@
               </div>
             </div>
             <div class="todo-actions">
-              <button class="action-btn action-edit" @click.stop="openEdit(todo)">修改</button>
+              <button v-if="!todo.completed" class="action-btn action-edit" @click.stop="openEdit(todo)">修改</button>
               <button class="action-btn action-delete" @click.stop="deleteTodo(todo)">删除</button>
             </div>
           </div>
@@ -59,7 +59,7 @@
               <div class="form-section">
                 <label class="form-label">截止时间</label>
                 <div class="form-time-picker" @click="etp.openTimePicker()">
-                  <span class="form-time-text">{{ etp.displayTime.value }}</span>
+                  <span class="form-time-text">{{ editPickerTime }}</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="form-time-arrow">
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
@@ -72,7 +72,7 @@
               </div>
             </div>
           </div>
-          <TimePickerModal
+          <TodoTimePicker
             :visible="etp.showTimeModal.value"
             :pickYear="etp.pickYear.value" :pickMonth="etp.pickMonth.value" :pickDay="etp.pickDay.value"
             :pickHour="etp.pickHour.value" :pickMinute="etp.pickMinute.value"
@@ -82,7 +82,7 @@
             @adjustMonth="etp.adjustMonth"
             @adjustDay="etp.adjustDay"
             @adjustHour="etp.adjustHour"
-            @adjustMinute="adjMinute"
+            @adjustMinute="etp.adjustMinute"
           />
         </div>
       </Transition>
@@ -93,7 +93,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { API_BASE } from '../config.js'
-import TimePickerModal from './TimePickerModal.vue'
+import TodoTimePicker from './TodoTimePicker.vue'
 import { useTimePicker } from '../composables/useTimePicker.js'
 
 defineEmits(['back'])
@@ -167,10 +167,16 @@ async function toggleComplete(todo) {
 }
 
 const etp = useTimePicker()
-function adjMinute() {
-  if (etp.pickMinute.value < 30) etp.pickMinute.value = 30
-  else etp.pickMinute.value = 0
-}
+
+// 编辑表单显示时间：直接从 picker 状态实时读取
+const editPickerTime = computed(() => {
+  const y = etp.pickYear.value
+  const m = String(etp.pickMonth.value).padStart(2, '0')
+  const d = String(etp.pickDay.value).padStart(2, '0')
+  const h = String(etp.pickHour.value).padStart(2, '0')
+  const mi = String(Math.round(etp.pickMinute.value / 10) * 10).padStart(2, '0')
+  return `${y}年${m}月${d}日 ${h}:${mi}`
+})
 
 const editingId = ref(null); const editTitle = ref('')
 function openEdit(todo) {
@@ -178,17 +184,32 @@ function openEdit(todo) {
   swipeId.value = null; swipeOffset.value = 0
   if (todo.due_date) {
     const parts = todo.due_date.split(/[- :]/)
-    etp.currentTime.value = new Date(+parts[0], +parts[1]-1, +parts[2], +parts[3], +parts[4], 0)
+    const dt = new Date(+parts[0], +parts[1]-1, +parts[2], +parts[3], +parts[4], 0)
+    etp.currentTime.value = dt
+    // 同步 picker 状态，保证 display 与选择器一致
+    etp.pickYear.value = dt.getFullYear()
+    etp.pickMonth.value = dt.getMonth() + 1
+    etp.pickDay.value = dt.getDate()
+    etp.pickHour.value = dt.getHours()
+    etp.pickMinute.value = dt.getMinutes()
   } else {
-    etp.currentTime.value = new Date()
+    const dt = new Date()
+    etp.currentTime.value = dt
+    etp.pickYear.value = dt.getFullYear()
+    etp.pickMonth.value = dt.getMonth() + 1
+    etp.pickDay.value = dt.getDate()
+    etp.pickHour.value = dt.getHours()
+    etp.pickMinute.value = dt.getMinutes()
   }
   nextTick(() => document.querySelector('.form-textarea')?.focus())
 }
 async function saveEdit() {
   if (!editTitle.value.trim() || editTitle.value.length > 50) return
   const todo = todos.value.find(t => t.id === editingId.value)
-  const d = etp.currentTime.value
-  const dueDate = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':00'
+  // 直接从 picker 状态读值，避免 confirm 未触发导致 currentTime 过期
+  const y = etp.pickYear.value, mo = etp.pickMonth.value, da = etp.pickDay.value
+  const h = etp.pickHour.value; let mi = Math.round(etp.pickMinute.value / 10) * 10
+  const dueDate = `${y}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')} ${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}:00`
   try {
     await fetch(API_BASE + '/api/todos/' + editingId.value, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -200,6 +221,7 @@ async function saveEdit() {
 }
 
 async function deleteTodo(todo) {
+  if (!confirm('确定删除"' + todo.title + '"吗？')) return
   try { await fetch(API_BASE + '/api/todos/' + todo.id, { method: 'DELETE' }); todos.value = todos.value.filter(t => t.id !== todo.id); swipeId.value = null; swipeOffset.value = 0 } catch (e) { console.error(e) }
 }
 

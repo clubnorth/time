@@ -30,20 +30,22 @@ func BookInfo(apiKey string) http.HandlerFunc {
       return
     }
 
-    prompt := fmt.Sprintf(`你是图书管理员。请查询书籍《%s》的真实信息，以纯JSON格式返回（不要markdown标记）：
-{"author":"作者姓名","nationality":"作者国籍","word_count":"字数（万字，如90）","first_publish_date":"首次出版年份(YYYY)","tags":["标签1","标签2","标签3"]}
-tags是3个简短中文标签概括这本书的类型或主题。必须填写真实数据，找不到信息就查相关资料合理推测。`, req.BookName)
+    jsonTemplate := `{"author":"作者","nationality":"国籍","word_count":"字数万字","first_publish_date":"年份","tags":["标签1","标签2","标签3"]}`
 
     body := map[string]interface{}{
       "model": "deepseek-chat",
       "messages": []map[string]string{
-        {"role": "system", "content": `你是专业的图书管理员。对于任何书籍，你必须返回具体的JSON数据，包括作者、国籍、字数和首次出版日期。如果数据不完全确定，请根据你的知识合理推测。`},
-        {"role": "user", "content": prompt},
+        {"role": "system", "content": `你是图书信息助手。你的训练数据包含大量豆瓣读书、Goodreads、亚马逊的书籍信息。请尽力回忆并返回准确信息。如果记不清，根据类似作品合理推测，但绝不用"未知"作为答案——可以用"可能xxx"。标签要有3个概括类型的简短中文。`},
+        {"role": "user", "content": fmt.Sprintf(`书籍《%s》的作者、国籍、字数、首次出版年份、标签，严格按此JSON格式返回（不要markdown）：\n%s`, req.BookName, jsonTemplate)},
       },
-      "max_tokens": 300,
-      "temperature": 0.3,
+      "max_tokens":  300,
+      "temperature": 0.6,
     }
-    jsonBody, _ := json.Marshal(body)
+    jsonBody, err := json.Marshal(body)
+    if err != nil {
+      respondError(w, 500, "internal error")
+      return
+    }
 
     client := &http.Client{Timeout: 15 * time.Second}
     httpReq, _ := http.NewRequest("POST", "https://api.deepseek.com/v1/chat/completions", bytes.NewReader(jsonBody))
@@ -79,7 +81,7 @@ tags是3个简短中文标签概括这本书的类型或主题。必须填写真
 
     var info bookInfoResponse
     if err := json.Unmarshal([]byte(content), &info); err != nil {
-      info = bookInfoResponse{Author: content, Nationality: "", WordCount: "", FirstPublishDate: ""}
+      info = bookInfoResponse{Author: content}
     }
 
     respond(w, 200, info)
