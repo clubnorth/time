@@ -139,6 +139,21 @@ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
 | 剧集 | `#D4A882` | 琥珀色 |
 | 动漫 | `#A099C4` | 紫色 |
 
+### 编辑面板标签胶囊
+
+v1.1 新增：EditEntryForm 中 tag 胶囊交互样式。
+
+| 属性 | 值 |
+|------|-----|
+| 胶囊底色 | 按标签名 hash 分配分类色标颜色（绿/琥珀/玫瑰） |
+| 文字颜色 | 对应颜色的深色变体（如 `#4A3B5C`） |
+| × 关闭按钮 | 16px × 16px 圆形，`border-radius: 50%`，hover 时背景加深 |
+| 关闭图标 | 细线 SVG ×（`stroke-width: 1.5`） |
+| 添加按钮 | 浅灰圆角按钮 `+ ` 文字，点击弹出输入框 |
+| 胶囊间距 | `gap: 6px` flex-wrap 布局 |
+| 圆角 | `--radius-sm: 6px` |
+| 字号 | 12px / 500 |
+
 ---
 
 ## 待办分类红色梯度
@@ -232,6 +247,77 @@ backdrop-filter: blur(16px);
 - `aria-label` 标注所有功能性按钮（排序、关闭、添加）
 - 可见键盘焦点：保留浏览器默认 outline
 - 触摸目标最小 32×32px（Apple HIG 标准）
+
+---
+
+## 时间选择器日历
+
+v1.1 重新设计的 TimePickerModal，采用日历 + 滚动轮双区布局。
+
+### 上半区 — 日历面板
+
+| 属性 | 值 |
+|------|-----|
+| 月导航箭头 | SVG chevron 细线图标（`stroke-width: 1.5`），颜色 `var(--color-graphite)` |
+| 月份文字 | 16px / 600，居中，`var(--color-ink)` |
+| 星期头行 | 一 二 三 四 五 六 日，11px / 400，`var(--color-graphite)`，底部细线分割 |
+| 日期格子 | 等宽 7 列 grid，格子 `aspect-ratio: 1`，14px / 400 |
+| 当天日期 | 蓝色 accent（`#007AFF`）描边圆底，白字 |
+| 选中日期 | 蓝色 accent 实心圆底，白字，`border-radius: 50%` |
+| 默认日期 | `var(--color-ink)` 无背景 |
+| 非当月日期 | `var(--color-pencil)` 淡色 |
+| 农历标注 | 10px，`var(--color-pencil)`，仅展示节气或初一/十五 |
+| 日历高度 | 固定约 280px，overflow hidden |
+
+### 下半区 — 滚动轮
+
+| 属性 | 值 |
+|------|-----|
+| 列数 | 2 列（时 / 分），等宽 |
+| 滚动容器 | `scroll-snap-type: y mandatory`，`overflow-y: auto` |
+| 每项高度 | 40px，上下各留 80px padding 形成可滚动区域 |
+| 吸附行为 | `scroll-snap-align: center` |
+| 字体 | 时/分数字：20px / 500，选中项加大到 22px / 600 |
+| 非选中项 | `var(--color-pencil)` 淡色，选中项 `var(--color-ink)` |
+| 分隔冒号 | 列间固定 `:` 字符，20px，`var(--color-graphite)` |
+
+### 高亮区
+
+| 属性 | 值 |
+|------|-----|
+| 位置 | 时/分列垂直居中，覆盖 3 行高度（约 120px） |
+| 背景色 | `rgba(0, 122, 255, 0.08)` 蓝色半透明 |
+| 上下边界 | 1px 细线 `rgba(0, 122, 255, 0.15)` |
+| 圆角 | `--radius-sm: 6px` |
+| 层级 | `z-index: 1`，数字文字 `z-index: 2` 浮于上方 |
+
+---
+
+## 筛选按钮
+
+v1.1 新增：YearMonthHeader 中的漏斗筛选按钮及弹出面板。
+
+### 漏斗图标按钮
+
+| 属性 | 值 |
+|------|-----|
+| 尺寸 | 32px × 32px 圆形按钮 |
+| 图标 | SVG funnel 图标，`stroke-width: 1.5` |
+| 默认颜色 | `var(--color-graphite)` 灰色 |
+| 激活颜色 | `#007AFF` 蓝色（有筛选条件时） |
+| Hover | 背景 `var(--color-surface-dim)` 圆形阴影 |
+| 位置 | YearMonthHeader 右侧，搜索图标旁 |
+
+### 筛选面板
+
+| 属性 | 值 |
+|------|-----|
+| 布局 | 多选项列表，每行：色点(8px 圆) + 标签名 + checkbox |
+| 面板样式 | 白色卡片，`border-radius: var(--radius-lg)`，`box-shadow: 0 4px 20px rgba(0,0,0,0.08)` |
+| 间距 | 选项行 `padding: 10px 16px`，底部操作栏 `padding: 12px 16px` |
+| 底部按钮 | "全部显示" / "全部隐藏" 文字按钮，`var(--color-graphite)` |
+| 动画 | scale(0.95)→1 + opacity fade，200ms |
+| 定位 | Teleport to body，绝对定位在漏斗按钮下方 |
 
 ---
 

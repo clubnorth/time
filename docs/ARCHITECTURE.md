@@ -1,6 +1,6 @@
 ﻿# 时间轴 · 项目架构文档
 
-> 版本 1.2.0 · 个人时间管理与待办事项应用 · 移动端 + 平板优先
+> 版本 1.1.0 · 个人时间管理与待办事项应用 · 移动端 + 平板优先
 
 ---
 
@@ -61,7 +61,8 @@ time/
 │       ├── ReadingFormPanel.vue   # 读书表单
 │       ├── MovieFormPanel.vue     # 影视表单
 │       ├── TodoFormPanel.vue      # 待办创建表单
-│       ├── TimePickerModal.vue    # 通用时间选择弹窗
+│       ├── TimePickerModal.vue    # 通用时间选择弹窗（底部弹出，支持补卡/编辑）
+│       ├── TodoTimePicker.vue     # 待办截止时间选择器
 │       ├── ConfirmModal.vue       # 确认对话框（替代 alert）
 │       ├── StatisticsPage.vue     # 统计页：热力图 + 卡片
 │       └── TodoPage.vue           # 待办事项页
@@ -149,9 +150,11 @@ App.vue                            → 根组件（状态 + 路由）
   ├── ExerciseFormPanel            → 运动表单
   ├── ReadingFormPanel             → 读书表单
   ├── MovieFormPanel               → 影视表单
-  ├── TodoFormPanel                → 待办创建表单
+  ├── TodoFormPanel                → 待办创建/编辑表单
+  ├── EditEntryForm.vue            → 条目编辑表单（补卡/修改记录）
   ├── ConfirmModal                 → 确认弹窗
-  └── TimePickerModal              → 底部弹出时间选择器（补卡用）
+  ├── TimePickerModal              → 底部弹出时间选择器（补卡/编辑用）
+  └── TodoTimePicker.vue           → 待办截止日期时间选择器
 ```
 
 ---
@@ -171,6 +174,7 @@ App.vue                            → 根组件（状态 + 路由）
 | GET | `/api/entries?limit=&before=` | `GetAllEntries` | 分页获取条目 |
 | GET | `/api/entries?month=` | `GetEntries` | 按月查询条目 |
 | POST | `/api/entries` | `CreateEntry` | 创建条目 (201) |
+| PUT | `/api/entries/{id}` | `UpdateEntry` | 更新条目 |
 | DELETE | `/api/entries/{id}` | `DeleteEntry` | 删除条目 |
 | POST | `/api/entries/recalculate?type=` | `RecalculateEntries` | 重算连续天数 |
 | POST | `/api/book-info` | `BookInfo` | DeepSeek 书籍信息查询 |
@@ -302,6 +306,27 @@ TodoFormPanel → 用户输入标题 + 选择分类 + 截止日期
   → handleTodoCreate(data)
     → POST /api/todos { title, category, due_date }
     → 创建成功后回首页
+```
+
+### 6.10 条目编辑
+
+```
+TimelineEntryCard(@edit) → 编辑按钮点击
+  → App.editEntry(entry)
+    → EditEntryForm 弹出（预填原有数据）
+    → 用户修改字段 + 可调整时间（TimePickerModal）
+    → 确认 → PUT /api/entries/{id}
+    → loadMonth() 刷新当前月份
+```
+
+### 6.11 时间轴筛选
+
+```
+YearMonthHeader(@filter) → 筛选按钮
+  → App.toggleFilter() → showFilterPanel = !showFilterPanel
+  → FilterPanel 弹出（按类型筛选：thought/asset/exercise 等）
+  → 用户选择/取消筛选类型
+  → loadMonth() 重新请求，过滤后的条目渲染
 ```
 
 ---

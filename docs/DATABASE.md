@@ -239,6 +239,8 @@ LIMIT 100;
 
 ### 迁移列表
 
+> 当前 v1.1.0 迁移版本：003
+
 | 文件 | 版本 | 说明 |
 |------|------|------|
 | `001_init.sql` | 1 | 初始建表（entries/settings/todos/schema_migrations） |

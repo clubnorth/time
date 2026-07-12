@@ -132,6 +132,37 @@ DELETE /api/entries/{id}
 
 **响应：** `{"code": 0, "data": {"status": "ok"} }`
 
+### 更新条目
+
+```
+PUT /api/entries/{id}
+Content-Type: application/json
+```
+
+**请求体：**（所有字段可选，只传需要修改的字段）
+
+```json
+{
+  "type": "thought",
+  "title": "念头·负",
+  "description": "更新后的描述",
+  "category": "red",
+  "valence": "negative",
+  "recorded_at": "2026-07-10 15:00:00"
+}
+```
+
+| 字段 | 类型 | 必需 | 说明 |
+|------|------|------|------|
+| `type` | string | 否 | 条目类型 |
+| `title` | string | 否 | 标题 |
+| `description` | string | 否 | 描述/数值 |
+| `category` | string | 否 | 颜色分类 |
+| `valence` | string | 否 | 附加值 |
+| `recorded_at` | string | 否 | 记录时间 |
+
+**响应：** 200 OK，返回更新后的完整条目对象。
+
 ---
 
 ## 设置 API

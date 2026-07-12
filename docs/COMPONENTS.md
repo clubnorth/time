@@ -53,18 +53,29 @@ App.vue (根)
 
 ## YearMonthHeader.vue
 
-**角色：** 固定在顶部的年月选择器。
+**角色：** 固定在顶部的年月选择器。v1.1 新增筛选功能。
 
 | Prop | 类型 | 说明 |
 |------|------|------|
 | `modelValue` | String | 当前月份 `YYYY-MM` |
 | `months` | Array | 可选月份列表 `[{label, value}]` |
+| `activeFilters` | Set | 当前激活的条目类型筛选集合 |
 
 | Emit | 参数 | 说明 |
 |------|------|------|
 | `update:modelValue` | value | 选中月份变化 |
+| `update:activeFilters` | filters | 筛选条件变化 |
+| `toggle-stats` | — | 打开统计页 |
+| `toggle-todo` | — | 打开待办页 |
 
-**状态：** `showDropdown` — 控制下拉菜单显隐。
+**状态：** `showDropdown` — 控制下拉菜单显隐；`showFilterPanel` — 控制筛选面板显隐。
+
+**v1.1 新增筛选功能：**
+- 搜索图标旁增加漏斗按钮（SVG funnel icon，未激活时灰色，有筛选时高亮蓝色）
+- 点击弹出多选筛选面板，列出所有条目类型（随记·太阳/阴雨、自律、禁糖、运动、资产、读书、影视、待办）
+- 每项带 checkbox + 色点标识，选中即显示
+- 底部"全部显示" / "全部隐藏"快捷按钮
+- 筛选面板使用 Teleport 挂载到 body
 
 ---
 
@@ -281,28 +292,81 @@ App.vue (根)
 
 ---
 
-## TimePickerModal.vue
+## EditEntryForm.vue
 
-**角色：** 底部弹出（bottom sheet）5 列时间选择器（年 / 月 / 日 / 时 / 分），展开自底部，带取消/确认按钮。
+**角色：** 条目编辑面板，v1.1 新增。长按卡片弹出，按条目类型展示专属编辑字段。
 
 | Prop | 类型 | 说明 |
 |------|------|------|
 | `visible` | Boolean | 控制显隐 |
-| `pickYear/Month/Day/Hour/Minute` | Number | 当前选中值 |
+| `entry` | Object | 待编辑的条目数据 |
+
+| Emit | 参数 | 说明 |
+|------|------|------|
+| `close` | — | 关闭编辑面板 |
+| `saved` | entry | 保存成功，通知父组件刷新 |
+
+**按类型分派字段：** 随记（备注）、自律/禁糖（时间）、运动（类型+数量+时间→自动重算卡路里）、读书（书名/作者/封面/分类胶囊/状态/评分）、影视（标题/导演/年份/封面/类型胶囊/状态/评分）、资产（余额）、尿酸（数值）。
+
+**标签胶囊：** 支持 `parseTags` 解析逗号分隔标签，已选标签以彩色胶囊展示（× 移除），+ 按钮添加新标签。
+
+**评分星星：** 复用与 ReadingFormPanel 相同的 1-10 分可点击星星组件。
+
+**保存：** `PUT /api/entries/:id` → emit `saved` → App.vue 刷新 timelineData。
+
+---
+
+## TodoTimePicker.vue
+
+**角色：** 待办专用时间选择器，v1.1 新增。10 分钟步进，滚动吸附。
+
+| Prop | 类型 | 说明 |
+|------|------|------|
+| `visible` | Boolean | 控制显隐 |
+| `modelValue` | String | 当前选中时间 `HH:MM` |
+
+| Emit | 参数 | 说明 |
+|------|------|------|
+| `update:modelValue` | value | 时间变化 |
+| `confirm` | value | 确认选择 |
+
+**特性：**
+- 小时/分钟双列滚动轮（`scroll-snap-type: y mandatory`）
+- 分钟列以 10 分钟为间隔（00, 10, 20, 30, 40, 50）
+- 当前值高亮区（蓝色背景条，上下居中）
+- 底部"取消"/"确定"按钮
+
+---
+
+## TimePickerModal.vue
+
+**角色：** 底部弹出（bottom sheet）时间选择器，v1.1 重新设计。上半部分日历面板选择日期，下半部分滚动轮选择时分。
+
+| Prop | 类型 | 说明 |
+|------|------|------|
+| `visible` | Boolean | 控制显隐 |
+| `modelValue` | String | 当前日期时间值 ISO 格式 |
 
 | Emit | 参数 | 说明 |
 |------|------|------|
 | `close` | — | 取消选择（关闭面板） |
-| `confirm` | — | 确认时间 |
-| `adjustYear/Month/Day/Hour/Minute` | delta | `+1` 或 `-1` |
+| `confirm` | value | 确认时间（ISO 字符串） |
 
-**视觉设计：**
-- Bottom sheet 布局：`border-radius: 20px 20px 0 0`，`max-width: var(--content-width)`
-- 每列：SVG chevron 上下箭头按钮 + 大号数字显示 + 单位标签
-- 头部：左侧"取消" + 中间"选择时间" + 右侧"确定"
+**布局（v1.1 新设计）：**
+- **上半区 — 日历面板**：
+  - 月导航栏：左箭头 SVG + 月份文字（居中对齐）+ 右箭头 SVG
+  - 星期头行：一 二 三 四 五 六 日（灰色小字）
+  - 日期网格：7 列 × 5-6 行，当天日期蓝色 accent 圆底白字，选中日期蓝色实心圆底
+  - 农历/节气标注（小字灰色，仅展示当月 1-2 个关键日期）
+- **下半区 — 滚动轮**：
+  - 时 / 分 双列滚动轮（`scroll-snap-type: y mandatory`）
+  - 中间高亮区（`rgba(0,122,255,0.08)` 蓝色半透明背景条）
+  - 分钟 5 分钟间隔（00, 05, 10, ..., 55）
+  - 滚动吸附到最近项
+- **底部栏**：左侧"取消" + 右侧蓝色"确定"按钮
 - 动画：`translateY(100%) → 0` 配合 opacity 过渡
 
-**内部方法：** `pad(n)` — 补零显示（月/日/时/分）。
+**内部方法：** `daysInMonth(year, month)`, `buildCalendar(year, month)` 构建当月日历网格。
 
 ---
 
@@ -325,11 +389,16 @@ App.vue (根)
 
 ## StatisticsPage.vue
 
-**角色：** 全页统计数据展示。
+**角色：** 全页统计数据展示。v1.1 改为原生滚动，新增读书/影视热力图。
 
 | Emit | 参数 | 说明 |
 |------|------|------|
 | `back` | — | 返回时间轴 |
+
+**v1.1 滚动改造：**
+- 移除自定义 pointer 拖拽滚动，改用原生 `overflow-x: auto` + `-webkit-overflow-scrolling: touch`
+- `scroll-behavior: smooth` 提供平滑滚动体验
+- 热力图行在移动端原生 momentum 滚动
 
 **数据获取：**
 - `onMounted` → `fetchAll()` → 分页拉取所有条目
@@ -337,40 +406,50 @@ App.vue (根)
 
 **8 种分类：** 随记·太阳、随记·阴雨、自律、禁糖、运动、资产、读书、影视
 
+**v1.1 新增读书/影视热力图：**
+- 读书热力图：按阅读状态（在读/已读）区分格子颜色深度
+- 影视热力图：按观看状态（想看/在看/已看/弃剧）区分格子颜色深度
+- 深色 = 已读/已看，浅色 = 在读/在看，最浅 = 想看
+
 **热力图构建：** `buildHeatmapWeeks(entries, year)`
 - 输入：某类型的条目列表 + 年份
-- 输出：7 列周数组，每格包含 `{date, filled, isToday, label, dateNum}`
+- 输出：7 列周数组，每格包含 `{date, filled, isToday, label, dateNum, intensity}`
 - 每月 1 号显示月份标签，每月末显示日期号
+- `intensity` 字段用于读书/影视的渐变颜色映射
 
 **统计卡片：** `topStats` (computed)
 - 总记录数 / 本月记录数 / 记录天数 / 已使用天数
 
-**交互：** 热力图区域支持 pointer 拖拽水平滚动。CSS `touch-action: pan-y` 确保垂直滑动穿透到页面滚动，仅水平滑动触发热力图滚动。
+**交互：** 热力图区域使用原生横向滚动（`overflow-x: auto`），CSS `touch-action: pan-y` 确保垂直滑动穿透。
 
 ---
 
 ## TodoPage.vue
 
-**角色：** 待办事项全页管理。
+**角色：** 待办事项全页管理。v1.1 增强左滑操作和完成同步。
 
 | Emit | 参数 | 说明 |
 |------|------|------|
 | `back` | — | 返回时间轴 |
 | `todo-synced` | entry | 完成待办时同步到时间轴 |
 
-**4 种自动分类：**
+**4 种自动分类（v1.1 优化）：**
 - **逾期 overdue** — 截止日期已过，红色梯度（`#D4787A` → `#E8A0A2`）
 - **今天 today** — 截止日期为今天，橙色梯度
 - **近期 upcoming** — 未来 7 天内，蓝色梯度
 - **稍后 later** — 7 天以上或无截止日期，灰色梯度
+- 分类切换使用标签栏（TabBar），流畅 CSS 过渡动画
 
 **交互：**
 - 添加：通过 `TodoFormPanel`（半小时间隔时间选择器，50 字符限制）
 - 切换完成：点击左侧圆圈 → `PATCH /api/todos/:id` + 同步到时间轴
-- 滑动操作：左滑显示编辑/删除操作按钮
+- **左滑操作（v1.1）：** 使用 `@touchstart` / `@touchmove` / `@touchend` 实现流畅左滑，reveal 编辑（蓝色）和删除（红色）操作按钮，需滑动超过阈值（60px）才固定展开，点击空白区域收回
 - 编辑：双击文本行内编辑（`blur` / `enter` 保存）
+- **完成同步（v1.1）：** 勾选待办完成时自动在时间轴中创建对应条目（`POST /api/entries`），emit `todo-synced` 通知 App.vue 刷新时间轴
 
 **数据获取：** `<script setup>` 顶层立即执行 `fetchTodos()`。
+
+**列表优化（v1.1）：** 使用 `v-memo` 优化长列表渲染性能，仅当 todo 状态或内容变化时重新渲染。
 
 ---
 

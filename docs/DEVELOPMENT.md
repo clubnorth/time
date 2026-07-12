@@ -199,6 +199,18 @@ kcal = MET × 体重(kg) × 时间(小时)
 
 代码位置：`src/App.vue` → `handleExerciseCreate()` → `metCalcs` 对象。
 
+### 编辑时重算
+
+v1.1：编辑运动条目时自动重算卡路里值。`EditEntryForm.vue` 中监听运动类型和数量的变化，调用相同的 `metCalcs` 公式重新计算卡路里，并更新到 entry 的 `description` 字段中。
+
+```javascript
+// 编辑时 kcal 重算逻辑
+const recalcKcal = (sport, amount) => {
+  const met = metCalcs[sport]
+  return met ? Math.round(met * amount * 10) / 10 : 0
+}
+```
+
 ---
 
 ## DeepSeek AI 集成
@@ -247,6 +259,83 @@ kcal = MET × 体重(kg) × 时间(小时)
 
 ---
 
+## 条目编辑系统
+
+v1.1 新增：在时间轴卡片上长按触发编辑弹窗（popover），根据条目类型展示对应编辑字段。
+
+### 编辑方式
+
+- **触发**：在 `TimelineEntryCard` 上长按（`@pointerdown` + 500ms 定时器）弹出编辑 popover
+- **实现**：通过 `EditEntryForm.vue` Teleport 到 body，定位在卡片旁
+
+### 按类型分派字段
+
+| 条目类型 | 可编辑字段 |
+|---------|----------|
+| 随记 | 备注内容（textarea，最大 200 字） |
+| 自律/禁糖 | 记录时间 |
+| 运动 | 运动类型、数量、时间（自动重算卡路里） |
+| 读书 | 书名、作者、封面、分类胶囊、阅读状态、评分 |
+| 影视 | 标题、导演、年份、封面、类型胶囊、观看状态、评分 |
+| 资产 | 余额数值 |
+| 尿酸 | 尿酸值 |
+
+### 保存逻辑
+
+- `PUT /api/entries/:id` 更新条目
+- 保存后 `App.vue` 刷新时间轴数据
+- 运动类型编辑后自动调用卡路里重算
+
+---
+
+## 标签胶囊编辑器
+
+v1.1 新增：EditEntryForm 和表单面板中的标签管理系统。
+
+```typescript
+// parseTags 工具方法
+function parseTags(str: string): string[] {
+  return str ? str.split(',') : []
+}
+```
+
+### 交互
+
+- **已选标签**：以彩色胶囊展示，右侧带 × 关闭按钮
+- **添加标签**：底部 + 按钮弹出输入框，输入后按回车添加
+- **移除标签**：点击胶囊 × 按钮移除
+- **存储格式**：标签以逗号分隔字符串存入 entry description
+
+### 胶囊颜色
+
+标签胶囊使用分类色标颜色（绿/琥珀/玫瑰），按标签名 hash 分配，确保同一标签颜色稳定。
+
+---
+
+## 时间轴筛选
+
+v1.1 新增：通过 YearMonthHeader 的漏斗按钮按条目类型筛选时间轴。
+
+### 入口
+
+- `YearMonthHeader` 搜索图标旁增加漏斗按钮（SVG funnel icon）
+- 点击弹出多选筛选面板
+
+### 筛选面板
+
+- 列出所有条目类型（随记·太阳、随记·阴雨、自律、禁糖、运动、资产、读书、影视、待办）
+- 每项带 checkbox，选中即显示，取消即隐藏
+- 底部"全部显示"/"全部隐藏"快捷按钮
+- 筛选状态存储在 `App.vue` 的 `activeFilters` ref 中
+
+### 实现
+
+- `activeFilters` 为 Set，包含当前选中的条目类型
+- TimelineEntryCard 根据 `entry.type` 是否在 Set 中决定 `v-if` 渲染
+- 筛选不影响已加载数据，仅控制显示
+
+---
+
 ## 读书记录工作流
 
 ### 状态生命周期
@@ -287,6 +376,28 @@ kcal = MET × 体重(kg) × 时间(小时)
 ### 后端数据
 
 `POST /api/media-info` 返回 `{title, director, year, cover, type, rating, summary}`，前端存入 entry 的 `description` 字段。
+
+---
+
+## 连续天数重算
+
+v1.1：删除条目时自动重算相关类型的连续天数（streak）。
+
+### 触发时机
+
+- 在 `TimelineEntryCard` 长按弹出 popover 中点击"删除"
+- 通过 `ConfirmModal` 确认后执行删除
+
+### 后端逻辑
+
+- `DELETE /api/entries/:id` 删除条目
+- 删除后立即调用 `POST /api/entries/recalculate` 重算所有 streak
+- `RecalculateEntries` 服务按类型分组统计连续天数，从今天回溯
+
+### 前端表现
+
+- 删除后 `App.vue` 重新拉取 `timelineData`
+- 统计页的热力图和 streak 计数同步更新
 
 ---
 
