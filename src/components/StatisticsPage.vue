@@ -241,7 +241,7 @@ function scrollHmRight() {
 .year-text { font-size: 15px; font-weight: 600; color: var(--color-ink); padding: 0 14px; min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
 
 .heatmaps { display: flex; flex-direction: column; gap: 12px; }
-.heatmap-card { background: var(--color-surface-dim); border-radius: var(--radius-lg); padding: 14px 10px; overflow: hidden; }
+.heatmap-card { background: var(--color-surface-dim); border-radius: var(--radius-lg); padding: 14px 10px 14px 10px }
 .heatmap-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 0 2px; }
 .heatmap-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .heatmap-title { font-size: 14px; font-weight: 600; color: var(--color-ink); }

@@ -7,13 +7,15 @@
       <div class="hollow-dot"></div>
     </div>
     <div class="card-col">
-      <div
-        class="card-wrapper"
-        @pointerdown.prevent="onDown"
-        @pointerup="onUp"
-        @pointercancel="onUp"
-      >
-        <div class="content-card" :class="'cat-' + (entry.category || 'yellow')">
+      <div class="card-wrapper" :class="{ swiped: swipeOffset < -30 }">
+        <div
+          class="content-card" :class="'cat-' + (entry.category || 'yellow')"
+          :style="{ transform: 'translateX(' + swipeOffset + 'px)' }"
+          @pointerdown.prevent="onDown"
+          @pointermove.prevent="onMove"
+          @pointerup="onUp"
+          @pointercancel="onUp"
+        >
           <div class="card-header">
             <span class="cat-line" :class="'cat-' + (entry.category || 'yellow')"></span>
             <h3 class="card-title">
@@ -26,52 +28,52 @@
               </span>
             </h3>
           </div>
-        <p v-if="entry.description" class="card-body" :class="{ asset: entry.isAsset, reading: entry.isReading, movie: entry.isMovie }">
-        <span v-if="entry.isAsset || entry.isReading || entry.isMovie" v-html="entry.description"></span>
-        <template v-else>{{ entry.description }}</template>
+          <p v-if="entry.description" class="card-body" :class="{ asset: entry.isAsset, reading: entry.isReading, movie: entry.isMovie }">
+          <span v-if="entry.isAsset || entry.isReading || entry.isMovie" v-html="entry.description"></span>
+          <template v-else>{{ entry.description }}</template>
         </p>
         </div>
-
-        <Transition name="popover">
-          <div v-if="showPopover" class="delete-popover">
-            <div class="popover-arrow"></div>
-            <div class="popover-body">
-              <button v-if="!(entry.isDiscipline || entry.isNosugar)" class="popover-edit-btn" @click.stop="confirmEdit">修改</button>
-              <button class="popover-delete-btn" @click.stop="confirmDelete">删除</button>
-              <button class="popover-cancel-btn" @click.stop="showPopover = false">取消</button>
-            </div>
-          </div>
-        </Transition>
+        <div class="card-actions">
+          <button v-if="!(entry.isDiscipline || entry.isNosugar)" class="action-btn action-edit" @click.stop="confirmEdit">修改</button>
+          <button class="action-btn action-delete" @click.stop="confirmDelete">删除</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref } from 'vue'
 
 const props = defineProps({ entry: Object })
 const emit = defineEmits(['delete-entry', 'edit-entry'])
 
-const showPopover = ref(false)
-let longPressTimer = null
+const swipeOffset = ref(0)
+let swipeStartX = 0
 
-function onDown() {
-  longPressTimer = setTimeout(() => { showPopover.value = true }, 3000)
+function onDown(e) {
+  swipeOffset.value = 0
+  swipeStartX = e.clientX
+}
+function onMove(e) {
+  const dx = e.clientX - swipeStartX
+  if (dx < 0) swipeOffset.value = Math.max(dx, -150)
 }
 function onUp() {
-  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null }
+  if (swipeOffset.value < -50) {
+    swipeOffset.value = -130
+  } else {
+    swipeOffset.value = 0
+  }
 }
 function confirmDelete() {
-  showPopover.value = false
+  swipeOffset.value = 0
   emit('delete-entry', { id: props.entry.id, isCheckIn: props.entry.isDiscipline || props.entry.isNosugar, checkType: props.entry.isDiscipline ? 'discipline' : props.entry.isNosugar ? 'nosugar' : '' })
 }
 function confirmEdit() {
-  showPopover.value = false
+  swipeOffset.value = 0
   emit('edit-entry', { id: props.entry.id, title: props.entry.title, description: props.entry.description, category: props.entry.category, time: props.entry.time, valence: props.entry.valence })
 }
-
-onUnmounted(() => { if (longPressTimer) clearTimeout(longPressTimer) })
 </script>
 
 <style scoped>
@@ -94,17 +96,19 @@ onUnmounted(() => { if (longPressTimer) clearTimeout(longPressTimer) })
 .hollow-dot {
   width: 8px; height: 8px; border-radius: 50%;
   border: 1.5px solid var(--color-pencil); background: var(--color-card);
-  flex-shrink: 0; z-index: 2; transition: transform .15s ease, border-color .15s ease;
+  flex-shrink: 0; z-index: 2;
 }
 
 .card-col { grid-column: 5; min-width: 0; overflow: visible }
-.card-wrapper { position: relative }
+.card-wrapper { position: relative; overflow: hidden; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 12px }
+.card-wrapper.swiped { z-index: 5 }
 
 .content-card {
   background: var(--color-card); border: 1px solid var(--color-border-light);
   border-left-width: 2px; border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: 14px 16px; margin-bottom: 12px;
-  transition: box-shadow .15s ease, transform .12s ease;
+  padding: 14px 16px;
+  transition: transform .2s ease;
+  position: relative; z-index: 2;
 }
 .content-card.cat-yellow { border-left-color: #D4A574 }
 .content-card.cat-red    { border-left-color: #D4787A }
@@ -129,8 +133,7 @@ onUnmounted(() => { if (longPressTimer) clearTimeout(longPressTimer) })
   font-size:13px;color:var(--color-graphite);line-height:1.65;
   margin:0;word-break:break-word;text-align:left;
 }
-.card-body.reading { line-height:1.8 }
-.card-body.movie { line-height:1.8 }
+.card-body.reading,.card-body.movie { line-height:1.8 }
 @media (min-width: 600px) { .card-body { font-size:14px } }
 .card-body :deep(.r-cat) {
   display:inline-block;padding:2px 12px;border-radius:10px;color:#fff;font-size:12px;font-weight:600;margin-top:2px;
@@ -147,45 +150,17 @@ onUnmounted(() => { if (longPressTimer) clearTimeout(longPressTimer) })
 }
 @keyframes rainbow-flow { to { background-position:200% center } }
 
-/* Delete popover */
-.delete-popover {
-  position:absolute;bottom:-8px;left:50%;transform:translateX(-50%) translateY(100%);
-  z-index:30;display:flex;flex-direction:column;align-items:center;
+/* Swipe actions */
+.card-actions {
+  position:absolute; top:0; right:0; bottom:0;
+  display:flex; align-items:stretch;
+  z-index:1;
 }
-.popover-arrow {
-  width:0;height:0;
-  border-left:8px solid transparent;border-right:8px solid transparent;
-  border-bottom:8px solid #fff;
-  filter:drop-shadow(0 -1px 1px rgba(0,0,0,.06));
+.action-btn {
+  width:65px;border:none;font-size:13px;font-weight:600;color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
 }
-.popover-body {
-  display:flex;align-items:center;gap:0;
-  background:#fff;border-radius:10px;
-  box-shadow:0 4px 16px rgba(0,0,0,.12);
-  overflow:hidden;
-}
-.popover-delete-btn {
-  padding:10px 20px;border:none;background:none;
-  font-size:14px;font-weight:500;color:#D4787A;cursor:pointer;
-  transition:background .12s;
-  border-left:1px solid var(--color-border-light);
-}
-.popover-delete-btn:hover { background:#FDF0F0 }
-.popover-edit-btn {
-  padding:10px 20px;border:none;background:none;
-  font-size:14px;font-weight:500;color:#7B9FC6;cursor:pointer;
-  transition:background .12s;
-}
-.popover-edit-btn:hover { background:#EFF6FF }
-.popover-cancel-btn {
-  padding:10px 20px;border:none;background:none;
-  font-size:14px;color:var(--color-graphite);cursor:pointer;
-  border-left:1px solid var(--color-border-light);
-  transition:background .12s;
-}
-.popover-cancel-btn:hover { background:var(--color-surface-dim) }
-
-.popover-enter-active { transition:opacity .15s ease,transform .15s ease }
-.popover-leave-active { transition:opacity .1s ease }
-.popover-enter-from,.popover-leave-to { opacity:0;transform:translateX(-50%) translateY(100%) scale(.9) }
+.action-delete { background:#D4787A }
+.action-edit   { background:#7B9FC6 }
 </style>
